@@ -2,7 +2,7 @@ package com.xavieralarosa.minigameroyalerest.controllers;
 
 import com.xavieralarosa.minigameroyalerest.models.AuthenticationRequest;
 import com.xavieralarosa.minigameroyalerest.models.AuthenticationResponse;
-import com.xavieralarosa.minigameroyalerest.services.MyUserDetailService;
+import com.xavieralarosa.minigameroyalerest.services.MyUserDetailsService;
 import com.xavieralarosa.minigameroyalerest.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,7 @@ public class HelloResource {
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private MyUserDetailService userDetailService;
+    private MyUserDetailsService userDetailService;
 
     @Autowired
     private JwtUtil jwtToken;

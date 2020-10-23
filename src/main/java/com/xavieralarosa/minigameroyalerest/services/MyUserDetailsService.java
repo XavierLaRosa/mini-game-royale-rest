@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 
 @Service
-public class MyUserDetailService implements UserDetailsService { // spring service
+public class MyUserDetailsService implements UserDetailsService { // spring service
 
     // called to load a user by username
     @Override
