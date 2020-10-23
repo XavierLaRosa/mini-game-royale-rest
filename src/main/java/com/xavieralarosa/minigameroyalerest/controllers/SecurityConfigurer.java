@@ -1,5 +1,6 @@
-package xavieralarosa.minigameroyalerest.controller;
+package com.xavieralarosa.minigameroyalerest.controllers;
 
+import com.xavieralarosa.minigameroyalerest.services.MyUserDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -7,7 +8,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import xavieralarosa.minigameroyalerest.services.MyUserDetailService;
 
 @EnableWebSecurity
 public class SecurityConfigurer extends WebSecurityConfigurerAdapter { // configurer and security for user name and password

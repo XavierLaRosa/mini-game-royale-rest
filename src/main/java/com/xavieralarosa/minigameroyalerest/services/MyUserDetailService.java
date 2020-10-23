@@ -1,4 +1,4 @@
-package xavieralarosa.minigameroyalerest.services;
+package com.xavieralarosa.minigameroyalerest.services;
 
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;

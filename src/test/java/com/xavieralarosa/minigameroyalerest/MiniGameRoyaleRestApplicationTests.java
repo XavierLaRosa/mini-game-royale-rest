@@ -1,4 +1,4 @@
-package xavieralarosa.minigameroyalerest;
+package com.xavieralarosa.minigameroyalerest;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
