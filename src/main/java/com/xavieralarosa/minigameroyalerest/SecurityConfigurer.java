@@ -1,7 +1,7 @@
-package com.xavieralarosa.minigameroyalerest.controllers;
+package com.xavieralarosa.minigameroyalerest;
 
-import com.xavieralarosa.minigameroyalerest.filters.JwtRequestFilter;
 import com.xavieralarosa.minigameroyalerest.services.MyUserDetailsService;
+import com.xavieralarosa.minigameroyalerest.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,7 +20,7 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter { // config
     private MyUserDetailsService myUserDetailsService;
 
     @Autowired
-    private JwtRequestFilter jwtRequestFilter;
+    private JwtUtil.JwtRequestFilter jwtRequestFilter;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {

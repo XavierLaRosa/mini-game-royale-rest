@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class HelloResource {
+public class HelloController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
@@ -26,10 +26,15 @@ public class HelloResource {
     @Autowired
     private JwtUtil jwtToken;
 
-    // test endpoint method
+    // test hello endpoint method
     @RequestMapping({"/hello"})
     public String hello() {
-        System.out.println("In hello method");
+        return "Hello world";
+    }
+
+    // test object endpoint method
+    @RequestMapping({"/object"})
+    public String getObject() {
         return "Hello world";
     }
 
