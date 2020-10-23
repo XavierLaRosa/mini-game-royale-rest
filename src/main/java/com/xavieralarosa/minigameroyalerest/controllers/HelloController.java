@@ -2,7 +2,7 @@ package com.xavieralarosa.minigameroyalerest.controllers;
 
 import com.xavieralarosa.minigameroyalerest.models.AuthenticationRequest;
 import com.xavieralarosa.minigameroyalerest.models.AuthenticationResponse;
-import com.xavieralarosa.minigameroyalerest.models.Game;
+import com.xavieralarosa.minigameroyalerest.models.CategoriesGame;
 import com.xavieralarosa.minigameroyalerest.services.MyUserDetailsService;
 import com.xavieralarosa.minigameroyalerest.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +35,8 @@ public class HelloController {
 
     // test object endpoint method
     @RequestMapping({"/object"})
-    public Game getObject() {
-        return new Game("categories", "0");
+    public CategoriesGame getObject() {
+        return new CategoriesGame("categories", "0");
     }
 
     // authenticated endpoint method
