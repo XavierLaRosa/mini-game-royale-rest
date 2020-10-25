@@ -51,8 +51,8 @@ router.put('/:id', getGame, async (req, res) => {
     res.game.max_round = req.body.max_round
 
     try {
-        const updatedgame = await res.game.save()
-        res.json(updatedgame)
+        const updatedGame = await res.game.save()
+        res.json(updatedGame)
     } catch {
         res.status(400).json({ message: err.message })
     }
