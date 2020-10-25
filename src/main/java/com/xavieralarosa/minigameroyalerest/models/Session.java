@@ -79,4 +79,16 @@ public class Session {
     public void setPlayer_2_wins(int player_2_wins) {
         this.player_2_wins = player_2_wins;
     }
+
+    @Override
+    public String toString() {
+        return "Session{" +
+                "_id='" + _id + '\'' +
+                ", game_id='" + game_id + '\'' +
+                ", player_1_id='" + player_1_id + '\'' +
+                ", player_1_wins=" + player_1_wins +
+                ", player_2_id='" + player_2_id + '\'' +
+                ", player_2_wins=" + player_2_wins +
+                '}';
+    }
 }

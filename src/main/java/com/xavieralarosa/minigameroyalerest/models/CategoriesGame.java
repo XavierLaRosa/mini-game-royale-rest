@@ -3,6 +3,8 @@ package com.xavieralarosa.minigameroyalerest.models;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Arrays;
+
 @Document(collection = "games")
 public class CategoriesGame {
     @Id
@@ -142,5 +144,23 @@ public class CategoriesGame {
 
     public void set_id(String _id) {
         this._id = _id;
+    }
+
+    @Override
+    public String toString() {
+        return "CategoriesGame{" +
+                "_id='" + _id + '\'' +
+                ", name='" + name + '\'' +
+                ", type_id='" + type_id + '\'' +
+                ", genre_id='" + genre_id + '\'' +
+                ", current_turn_id='" + current_turn_id + '\'' +
+                ", player_1_id='" + player_1_id + '\'' +
+                ", player_1_points=" + player_1_points +
+                ", player_2_id='" + player_2_id + '\'' +
+                ", player_2_points=" + player_2_points +
+                ", verified_answers=" + Arrays.toString(verified_answers) +
+                ", round=" + round +
+                ", max_round=" + max_round +
+                '}';
     }
 }

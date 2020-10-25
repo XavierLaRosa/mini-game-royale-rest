@@ -33,12 +33,6 @@ public class HelloController {
         return "Hello world";
     }
 
-    // test object endpoint method
-    @RequestMapping({"/object"})
-    public CategoriesGame getObject() {
-        return new CategoriesGame("categories", "0");
-    }
-
     // authenticated endpoint method
     @RequestMapping(value = "/authenticate", method = RequestMethod.POST)
     public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
