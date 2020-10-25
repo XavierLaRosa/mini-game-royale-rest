@@ -18,5 +18,8 @@ app.use(express.json())
 const usersRouter = require('./routes/users')
 app.use('/users', usersRouter)
 
+const gamesRouter = require('./routes/games')
+app.use('/games', gamesRouter)
+
 // test out server is working
 app.listen(3000, () => console.log('server started'))
