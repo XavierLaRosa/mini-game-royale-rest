@@ -24,5 +24,8 @@ app.use('/games', gamesRouter)
 const sessionsRouter = require('./routes/sessions')
 app.use('/sessions', sessionsRouter)
 
+const categoriesRouter = require('./routes/categories')
+app.use('/categories', categoriesRouter)
+
 // test out server is working
 app.listen(3000, () => console.log('server started'))

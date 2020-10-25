@@ -34,12 +34,12 @@ router.post('/', async (req, res) => {
         max_round: req.body.max_round
       })
     
-      try {
+    try {
         const newGame = await game.save()
         res.status(201).json(newGame)
-      } catch (err) {
+    } catch (err) {
         res.status(400).json({ message: err.message })
-      }
+    }
 })
 
 // Update one game
