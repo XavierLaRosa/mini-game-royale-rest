@@ -19,10 +19,33 @@ router.get('/:id', getUser, async (req, res) => {
 })
 
 // Create one user
+const Joi = require('joi');
+const schema = Joi.object({
+    username: Joi.string().min(4).max(255).required(),
+    password: Joi.string().min(4).max(1024).required(),
+  });
+const bcrypt = require('bcrypt');
+
 router.post('/', async (req, res) => {
+    // validate user
+    const { error } = schema.validate(req.body);
+    if(error){
+        return res.status(400).json({ message: error.details[0].message });
+    }
+
+    // check if user already exists
+    const isUserExist = await User.findOne({ username: req.body.username });
+    if(isUserExist){
+        return res.status(400).json({ message: "Username already exists" });
+    }
+
+    // hash the password
+    const salt = await bcrypt.genSalt(10);
+    const password = await bcrypt.hash(req.body.password, salt);
+
     const user = new User({
         username: req.body.username,
-        password: req.body.password,
+        password, // hashed password
         friends: [],
         pending_friends_sent: [],
         pending_friends_received: [],
@@ -38,6 +61,46 @@ router.post('/', async (req, res) => {
         res.status(400).json({ message: err.message })
       }
 })
+
+// Post login user
+router.post("/login", async (req, res) => {
+    // validate the user
+    const { error } = schema.validate(req.body);
+    if (error) return res.status(400).json({ message: error.details[0].message });
+
+    // throw error if username is wrong
+    const user = await User.findOne({ username: req.body.username });
+    if (!user) return res.status(400).json({ message: "Username is incorrect" });
+    
+    // check for password correctness
+    const validPassword = await bcrypt.compare(req.body.password, user.password);
+    if (!validPassword)
+    return res.status(400).json({ message: "Password is incorrect" });
+
+    // create jwt token
+    const jwt = require('jsonwebtoken');
+    const token = jwt.sign(
+        // payload data
+        {
+            username: user.username,
+            id: user._id,
+        },
+        process.env.TOKEN_SECRET
+    );
+    res.header("auth-token", token).json({
+        message: "Login successful",
+        token,
+        data: {
+            username: user.username,
+            pending_friends_sent: user.pending_friends_sent,
+            pending_friends_received: user.pending_friends_received,
+            pending_game_invites: user.pending_game_invites,
+            active_games: user.active_games,
+            games: user.games,
+            date_created: user.date_created
+        }
+    });
+  });
 
 // Update one user
 router.put('/:id', getUser, async (req, res) => {
