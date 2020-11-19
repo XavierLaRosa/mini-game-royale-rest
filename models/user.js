@@ -16,7 +16,11 @@ const userSchema = new mongoose.Schema({
     pending_friends_received: [String],
     pending_game_invites: [String],
     active_games: [String],
-    games: [String]
+    games: [String],
+    date_created: {
+      type: Date,
+      default: Date.now,
+    }
 })
 
 // export user schema

@@ -19,7 +19,24 @@ router.get('/:id', getUser, async (req, res) => {
 })
 
 // Create one user
+const Joi = require('joi');
+const schema = Joi.object({
+    username: Joi.string().min(4).max(255).required(),
+    password: Joi.string().min(4).max(1024).required(),
+  });
 router.post('/', async (req, res) => {
+    // validate user
+    const { error } = schema.validate(req.body);
+    if(error){
+        return res.status(400).json({ error: error.details[0].message });
+    }
+
+    // check if user already exists
+    const isUserExist = await User.findOne({ username: req.body.username });
+    if(isUserExist){
+        return res.status(400).json({ error: "Username already exists" });
+    }
+
     const user = new User({
         username: req.body.username,
         password: req.body.password,
