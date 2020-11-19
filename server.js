@@ -12,6 +12,9 @@ const db = mongoose.connection
 db.on('error', (error) => console.error(error))
 db.once('open', () => console.log('connected to database'))
 
+// import token
+const verifyToken = require("./routes/validate-token");
+
 // tell express to accept JSON as the data format
 app.use(express.json())
 
@@ -19,13 +22,13 @@ const usersRouter = require('./routes/users')
 app.use('/users', usersRouter)
 
 const gamesRouter = require('./routes/games')
-app.use('/games', gamesRouter)
+app.use('/games', verifyToken, gamesRouter)
 
 const sessionsRouter = require('./routes/sessions')
-app.use('/sessions', sessionsRouter)
+app.use('/sessions', verifyToken, sessionsRouter)
 
 const categoriesRouter = require('./routes/categories')
-app.use('/categories', categoriesRouter)
+app.use('/categories', verifyToken, categoriesRouter)
 
 // test out server is working
 app.listen(3000, () => console.log('server started'))
