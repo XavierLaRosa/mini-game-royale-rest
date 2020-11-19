@@ -24,6 +24,8 @@ const schema = Joi.object({
     username: Joi.string().min(4).max(255).required(),
     password: Joi.string().min(4).max(1024).required(),
   });
+const bcrypt = require('bcrypt');
+
 router.post('/', async (req, res) => {
     // validate user
     const { error } = schema.validate(req.body);
@@ -37,9 +39,13 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ error: "Username already exists" });
     }
 
+    // hash the password
+    const salt = await bcrypt.genSalt(10);
+    const password = await bcrypt.hash(req.body.password, salt);
+
     const user = new User({
         username: req.body.username,
-        password: req.body.password,
+        password, // hashed password
         friends: [],
         pending_friends_sent: [],
         pending_friends_received: [],
