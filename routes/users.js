@@ -62,7 +62,7 @@ router.post('/', async (req, res) => {
       }
 })
 
-// login route
+// Post login user
 router.post("/login", async (req, res) => {
     // validate the user
     const { error } = schema.validate(req.body);
