@@ -22,7 +22,7 @@ router.get('/:id', getGame, async (req, res) => {
 router.post('/', async (req, res) => {
     const game = new Game({
         name: req.body.name,
-        type_id: req.body.type_id,
+        session_id: req.body.session_id,
         genre_id: req.body.genre_id,
         current_turn_id: req.body.current_turn_id,
         player_1_id: req.body.player_1_id,
