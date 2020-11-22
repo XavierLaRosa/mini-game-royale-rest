@@ -91,6 +91,32 @@ router.get('/contains/:keyword', async (req, res) => {
     }
 })
 
+// Send a friend request
+router.put('/friend-request/sender/:sid/receiver/:id', getUser, async (req, res) => {
+    try {
+        res.user.pending_friends_received.push(req.params.sid)
+        res.user.save()
+        res.json({message: "friend request sent"})
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
+})
+
+// Confirm friend request sent
+router.put('/friend-request/sender/:id/receiver/:rid/confirm', getUser, async (req, res) => {
+    try {
+        res.user.pending_friends_sent.push(req.params.rid)
+        try {
+            const updatedUser = await res.user.save()
+            res.json(updatedUser)
+        } catch {
+            res.status(400).json({ message: err.message })
+        }
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
+})
+
 // Create one user
 const Joi = require('joi');
 const schema = Joi.object({
