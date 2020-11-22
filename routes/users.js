@@ -148,15 +148,7 @@ router.post("/login", async (req, res) => {
     res.header("auth-token", token).json({
         message: "Login successful",
         token,
-        data: {
-            username: user.username,
-            pending_friends_sent: user.pending_friends_sent,
-            pending_friends_received: user.pending_friends_received,
-            pending_game_invites: user.pending_game_invites,
-            active_games: user.active_games,
-            games: user.games,
-            date_created: user.date_created
-        }
+        user: user
     });
   });
 
