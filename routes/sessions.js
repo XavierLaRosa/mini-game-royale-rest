@@ -24,7 +24,8 @@ router.get('/:id', getSession, async (req, res) => {
         path: 'game_id',
         populate: {
           path: 'genre_id',
-          model: 'Category'
+          model: 'Category',
+          select: 'category'
         } 
     }).
     populate({ 

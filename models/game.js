@@ -13,7 +13,10 @@ const gameSchema = new mongoose.Schema({
         type: Schema.Types.ObjectId,
         ref: "Category"
     },
-    current_turn_id: String,
+    current_turn_id: {
+        type: Schema.Types.ObjectId,
+        ref: "User"
+    },
     player_1_id: {
         type: Schema.Types.ObjectId,
         ref: "User"

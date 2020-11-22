@@ -15,7 +15,16 @@ router.get('/', async (req, res) => {
 
 // Get one game
 router.get('/:id', getGame, async (req, res) => {
-    res.json(res.game)
+    Game.findOne({ _id: res.game._id })
+    .populate('genre_id', 'cateogory').
+    populate('current_turn_id', 'username').
+    populate('player_1_id', 'username').
+    populate('player_2_id', 'username').
+    exec(function (err, g) {
+        if (err) return handleError(err);
+        res.game = g
+        res.json(res.game)
+    })
 })
 
 // Create one game
