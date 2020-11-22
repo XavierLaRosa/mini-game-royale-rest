@@ -19,11 +19,11 @@ router.get('/:id', getUser, async (req, res) => {
         .populate('friends', 'username').
         populate('pending_friends_sent', 'username').
         populate('pending_friends_received', 'username').
+        populate('pending_game_invites').
+        populate('games').
             exec(function (err, u) {
                 if (err) return handleError(err);
-                res.user.friends = u.friends
-                res.user.pending_friends_sent = u.pending_friends_sent
-                res.user.pending_friends_received = u.pending_friends_received
+                res.user = u
                 res.json(res.user)
             })
 })
@@ -129,15 +129,12 @@ router.put('/:id', getUser, async (req, res) => {
     if (req.body.pending_friends_received != null){ // check pending_friends_received
         res.user.pending_friends_received = req.body.pending_friends_received
     }
-    // if (!arraysEqual(req.body.pending_game_invites, req.user.pending_game_invites)){ // check pending_game_invites
-    //     res.user.pending_game_invites = req.body.pending_game_invites
-    // }
-    // if (!arraysEqual(req.body.active_games, req.user.active_games)){ // check active_games
-    //     res.user.active_games = req.body.active_games
-    // }
-    // if (!arraysEqual(req.body.games, req.user.games)){ // check games
-    //     res.user.games = req.body.games
-    // }
+    if (req.body.pending_game_invites != null){ // check pending_game_invites
+        res.user.pending_game_invites = req.body.pending_game_invites
+    }
+    if (req.body.games != null){ // check games
+        res.user.games = req.body.games
+    }
 
     try {
         const updatedUser = await res.user.save()
