@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
 
 // Get one user
 router.get('/:id', getUser, async (req, res) => {
-    User.findOne({ username: res.user.username })
+    User.findOne({ _id: res.user._id })
         .populate('friends', 'username').
         populate('pending_friends_sent', 'username').
         populate('pending_friends_received', 'username').
