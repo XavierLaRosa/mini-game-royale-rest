@@ -76,6 +76,21 @@ router.get('/:id', getUser, async (req, res) => {
         })
 })
 
+// Get list of matching users
+router.get('/contains/:keyword', async (req, res) => {
+    try {
+        User.find({ "username": { "$regex": req.params.keyword} })
+        .select('username')
+        .exec(function (err, u) {
+            res.json(u)
+        })
+
+
+    } catch (err) {
+        res.status(500).json({ message: err.message })
+    }
+})
+
 // Create one user
 const Joi = require('joi');
 const schema = Joi.object({
