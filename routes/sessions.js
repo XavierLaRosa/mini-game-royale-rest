@@ -40,7 +40,8 @@ router.post('/', async (req, res) => {
 router.put('/:id', getSession, async (req, res) => {
     res.session.player_1_wins = req.body.player_1_wins
     res.session.player_2_wins = req.body.player_2_wins
-
+    res.session.game_id = req.body.game_id
+    
     try {
         const updatedSession = await res.session.save()
         res.json(updatedSession)

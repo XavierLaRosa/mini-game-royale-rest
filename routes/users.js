@@ -21,11 +21,59 @@ router.get('/:id', getUser, async (req, res) => {
         populate('pending_friends_received', 'username').
         populate('pending_game_invites').
         populate('games').
-            exec(function (err, u) {
-                if (err) return handleError(err);
-                res.user = u
-                res.json(res.user)
-            })
+        populate({ 
+            path: 'pending_game_invites',
+            populate: {
+              path: 'player_1_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'pending_game_invites',
+            populate: {
+              path: 'player_2_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'pending_game_invites',
+            populate: {
+              path: 'current_turn_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'games',
+            populate: {
+              path: 'player_1_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'games',
+            populate: {
+              path: 'player_2_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'games',
+            populate: {
+              path: 'current_turn_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        exec(function (err, u) {
+            if (err) return handleError(err);
+            res.user = u
+            res.json(res.user)
+        })
 })
 
 // Create one user
