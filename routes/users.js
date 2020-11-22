@@ -15,7 +15,13 @@ router.get('/', async (req, res) => {
 
 // Get one user
 router.get('/:id', getUser, async (req, res) => {
-    res.json(res.user)
+    User.findOne({ username: res.user.username })
+        .populate('friends', 'username').
+            exec(function (err, u) {
+                if (err) return handleError(err);
+                res.user.friends = u.friends
+                res.json(res.user)
+            })
 })
 
 // Create one user
@@ -110,9 +116,9 @@ router.put('/:id', getUser, async (req, res) => {
     if (req.body.password != null) { // check password
         res.user.password = req.body.password
     }
-    // if (!arraysEqual(req.body.friends, req.user.friends)){ // check friends
-    //     res.user.friends = req.body.friends
-    // }
+    if (req.body.friends != null){ // check friends
+        res.user.friends = req.body.friends
+    }
     // if (!arraysEqual(req.body.pending_friends_sent, req.user.pending_friends_sent)){ // check pending_friends_sent
     //     res.user.pending_friends_sent = req.body.pending_friends_sent
     // }
