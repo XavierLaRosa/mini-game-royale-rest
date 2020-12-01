@@ -119,18 +119,65 @@ router.get('/contains/:keyword', async (req, res) => {
 // Send a friend request
 router.put('/friend-request/sender/:sid/receiver/:id', getUser, async (req, res) => {
     try {
-        res.user.pending_friends_received.push(req.params.sid)
-        res.user.save()
-        console.log("changed 1: ", res.user)
-        res.json({message: "friend request sent"})
+        console.log("user: ", res.user)
+        console.log("friends: ", res.user.friends)
+        console.log("id: ", req.params.sid)
+        if(res.user.friends.includes(req.params.sid)){
+            res.json({message: "already friends"})
+        } else if(res.user.pending_friends_received.includes(req.params.sid)){
+            res.json({message: "friend request already sent"})
+        } else {
+            res.user.pending_friends_received.push(req.params.sid)
+            res.user.save()
+            console.log("changed 1: ", res.user)
 
-        User.findOne({ _id: req.params.sid}).
-        exec(function (err, u) {
-            if (err) return handleError(err);
-            u.pending_friends_sent.push(req.params.id)
-            u.save()
-            console.log("change", u)
-        })
+            User.findOne({ _id: req.params.sid}).
+            exec(function (err, u) {
+                if (err) return handleError(err);
+                u.pending_friends_sent.push(req.params.id)
+                u.save()
+                console.log("change", u)
+            })
+
+            res.json({message: "friend request sent"})
+        }
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
+})
+
+// Confirm a friend request
+router.put('/friend-request/sender/:sid/receiver/:id/confirm', getUser, async (req, res) => {
+    try {
+        console.log("recv user 1: ", res.user)
+        console.log("friends: ", res.user.friends)
+        console.log("id: ", req.params.sid)
+
+        if(res.user.pending_friends_received.indexOf(req.params.sid) >= 0){
+            console.log("checking")
+            res.user.pending_friends_received.splice(res.user.pending_friends_received.indexOf(req.params.sid), 1)
+            res.user.friends.push(req.params.sid)
+            res.user.save()
+            console.log("recv user 2: ", res.user)
+    
+            User.findOne({ _id: req.params.sid}).
+            exec(function (err, u) {
+                if (err) return handleError(err);
+                console.log("send user 1: ", u)
+                if(u.pending_friends_sent.indexOf(req.params.id) >= 0){
+                    u.pending_friends_sent.splice(u.pending_friends_sent.indexOf(req.params.id), 1)
+                    u.friends.push(req.params.id)
+                    u.save()
+                    console.log("send user 2: ", u)
+                    res.json({message: "confirmed friend request"})
+                } else {
+                    res.status(500).json({ message: "friends do not match" })
+                }
+            })
+        } else {
+            res.status(500).json({ message: "friends do not match" })
+        }
+
     } catch {
         res.status(400).json({ message: err.message })
     }
@@ -183,21 +230,6 @@ router.put('/game-confirm/game/:gid/sender/:id/receiver/:rid', getUser, async (r
     }
 })
 
-// Confirm friend request sent
-router.put('/friend-request/sender/:id/receiver/:rid/confirm', getUser, async (req, res) => {
-    // try {
-    //     res.user.pending_friends_sent.push(req.params.rid)
-    //     try {
-    //         const updatedUser = await res.user.save()
-    //         res.json(updatedUser)
-    //     } catch {
-    //         res.status(400).json({ message: err.message })
-    //     }
-    // } catch {
-    //     res.status(400).json({ message: err.message })
-    // }
-})
-
 // Create one user
 const Joi = require('joi');
 const schema = Joi.object({
@@ -205,6 +237,7 @@ const schema = Joi.object({
     password: Joi.string().min(4).max(1024).required(),
   });
 const bcrypt = require('bcrypt');
+const { error } = require('console')
 
 router.post('/', async (req, res) => {
     // validate user
