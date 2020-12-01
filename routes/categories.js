@@ -18,6 +18,23 @@ router.get('/:id', getCategory, async (req, res) => {
     res.json(res.category)
 })
 
+// Check if answer is right
+router.get('/:id/submit/:submission', getCategory, async (req, res) => {
+    if(res.category.answers.includes(req.params.submission.toLowerCase())){
+        res.json({
+            category: res.category.category,
+            answer: req.params.submission.toLowerCase(),
+            is_valid: true
+        })
+    } else {
+        res.json({
+            category: res.category.category,
+            answer: req.params.submission.toLowerCase(),
+            is_valid: false
+        })
+    }    
+})
+
 // Create one category
 router.post('/', async (req, res) => {
     const category = new Category({

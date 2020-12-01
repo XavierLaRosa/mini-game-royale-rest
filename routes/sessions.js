@@ -15,13 +15,50 @@ router.get('/', async (req, res) => {
 
 // Get one session
 router.get('/:id', getSession, async (req, res) => {
+
+    const s = await Session.findOne({ _id: req.params.id })
+    .populate('player_1_id', 'username').
+    populate('player_2_id', 'username').
+    populate('game_id').
+    populate({ 
+        path: 'game_id',
+        populate: {
+          path: 'genre_id',
+          model: 'Category',
+          select: 'category'
+        } 
+    }).
+    populate({ 
+        path: 'game_id',
+        populate: {
+          path: 'player_1_id',
+          model: 'User',
+          select: 'username'
+        } 
+    }).
+    populate({ 
+        path: 'game_id',
+        populate: {
+          path: 'player_2_id',
+          model: 'User',
+          select: 'username'
+        } 
+    }).
+    populate({ 
+        path: 'game_id',
+        populate: {
+          path: 'current_turn_id',
+          model: 'User',
+          select: 'username'
+        } 
+    })
+    res.session = s
     res.json(res.session)
 })
 
 // Create one session
 router.post('/', async (req, res) => {
     const session = new Session({
-        game_id: req.body.game_id,
         player_1_id: req.body.player_1_id,
         player_1_wins: 0,
         player_2_id: req.body.player_2_id,
@@ -40,7 +77,8 @@ router.post('/', async (req, res) => {
 router.put('/:id', getSession, async (req, res) => {
     res.session.player_1_wins = req.body.player_1_wins
     res.session.player_2_wins = req.body.player_2_wins
-
+    res.session.game_id = req.body.game_id
+    
     try {
         const updatedSession = await res.session.save()
         res.json(updatedSession)
