@@ -136,6 +136,53 @@ router.put('/friend-request/sender/:sid/receiver/:id', getUser, async (req, res)
     }
 })
 
+// Send a game request
+router.put('/game-request/game/:gid/sender/:sid/receiver/:id', getUser, async (req, res) => {
+    try {
+        console.log("receiving user before: ", res.user)
+        res.user.pending_games_received.push(req.params.gid)
+        res.user.save()
+        console.log("changed 1: ", res.user)
+        res.json({message: "game request sent"})
+
+        User.findOne({ _id: req.params.sid}).
+        exec(function (err, u) {
+            if (err) return handleError(err);
+            u.pending_games_sent.push(req.params.gid)
+            u.save()
+            console.log("change", u)
+        })
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
+})
+
+// Confirm game request
+router.put('/game-confirm/game/:gid/sender/:id/receiver/:rid', getUser, async (req, res) => {
+    try {
+        if(res.user.pending_games_received.indexOf(req.params.gid) >= 0){
+            res.user.pending_games_received.splice(res.user.pending_games_received.indexOf(req.params.gid), 1);
+        }
+        res.user.games.push(req.params.gid)
+        res.user.save()
+        console.log("changed 1: ", res.user)
+        res.json({message: "game request sent"})
+
+        User.findOne({ _id: req.params.rid}).
+        exec(function (err, u) {
+            if (err) return handleError(err);
+            if(u.pending_games_sent.indexOf(req.params.gid) >= 0){
+                u.pending_games_sent.splice(u.pending_games_sent.indexOf(req.params.gid), 1);
+            }
+            u.games.push(req.params.gid)
+            u.save()
+            console.log("change", u)
+        })
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
+})
+
 // Confirm friend request sent
 router.put('/friend-request/sender/:id/receiver/:rid/confirm', getUser, async (req, res) => {
     // try {

@@ -5,10 +5,6 @@ const Schema = mongoose.Schema
 // define the schema
 const gameSchema = new mongoose.Schema({
     name: String,
-    session_id: {
-        type: Schema.Types.ObjectId,
-        ref: "Session"
-    },
     genre_id: {
         type: Schema.Types.ObjectId,
         ref: "Category"
