@@ -19,10 +19,10 @@ router.get('/:id', getUser, async (req, res) => {
         .populate('friends', 'username').
         populate('pending_friends_sent', 'username').
         populate('pending_friends_received', 'username').
-        populate('pending_game_invites').
         populate('games').
+        populate('pending_games_sent').
         populate({ 
-            path: 'pending_game_invites',
+            path: 'pending_games_sent',
             populate: {
               path: 'player_1_id',
               model: 'User',
@@ -30,7 +30,7 @@ router.get('/:id', getUser, async (req, res) => {
             } 
         }).
         populate({ 
-            path: 'pending_game_invites',
+            path: 'pending_games_sent',
             populate: {
               path: 'player_2_id',
               model: 'User',
@@ -38,7 +38,32 @@ router.get('/:id', getUser, async (req, res) => {
             } 
         }).
         populate({ 
-            path: 'pending_game_invites',
+            path: 'pending_games_sent',
+            populate: {
+              path: 'current_turn_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate('pending_games_received').
+        populate({ 
+            path: 'pending_games_received',
+            populate: {
+              path: 'player_1_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'pending_games_received',
+            populate: {
+              path: 'player_2_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'pending_games_received',
             populate: {
               path: 'current_turn_id',
               model: 'User',
@@ -148,7 +173,8 @@ router.post('/', async (req, res) => {
         friends: [],
         pending_friends_sent: [],
         pending_friends_received: [],
-        pending_game_invites: [],
+        pending_games_sent: [],
+        pending_games_received: [],
         active_games: [],
         games: []
       })
@@ -210,8 +236,11 @@ router.put('/:id', getUser, async (req, res) => {
     if (req.body.pending_friends_received != null){ // check pending_friends_received
         res.user.pending_friends_received = req.body.pending_friends_received
     }
-    if (req.body.pending_game_invites != null){ // check pending_game_invites
-        res.user.pending_game_invites = req.body.pending_game_invites
+    if (req.body.pending_games_sent != null){ // check pending_games_sent
+        res.user.pending_games_sent = req.body.pending_games_sent
+    }
+    if (req.body.pending_games_received != null){ // check pending_games_received
+        res.user.pending_games_received = req.body.pending_games_received
     }
     if (req.body.games != null){ // check games
         res.user.games = req.body.games

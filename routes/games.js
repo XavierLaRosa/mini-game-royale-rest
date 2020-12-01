@@ -40,7 +40,8 @@ router.post('/', async (req, res) => {
         player_2_points: 0,
         verified_answers: [],
         round: 0,
-        max_round: req.body.max_round
+        max_round: req.body.max_round,
+        active: req.body.active
       })
     
     try {

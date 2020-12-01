@@ -23,7 +23,11 @@ const userSchema = new mongoose.Schema({
         type: Schema.Types.ObjectId,
         ref: "User"
     }],
-    pending_game_invites: [{
+    pending_games_sent: [{
+        type: Schema.Types.ObjectId,
+        ref: "Game"
+    }],
+    pending_games_received: [{
         type: Schema.Types.ObjectId,
         ref: "Game"
     }],
