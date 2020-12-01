@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 // Get one game
 router.get('/:id', getGame, async (req, res) => {
     Game.findOne({ _id: res.game._id })
-    .populate('genre_id', 'cateogory').
+    .populate('genre_id', 'category').
     populate('current_turn_id', 'username').
     populate('player_1_id', 'username').
     populate('player_2_id', 'username').
