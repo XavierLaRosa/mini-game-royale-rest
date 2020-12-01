@@ -183,6 +183,41 @@ router.put('/friend-request/sender/:sid/receiver/:id/confirm', getUser, async (r
     }
 })
 
+// Decline a friend request
+router.put('/friend-request/sender/:sid/receiver/:id/decline', getUser, async (req, res) => {
+    try {
+        console.log("recv user 1: ", res.user)
+        console.log("friends: ", res.user.friends)
+        console.log("id: ", req.params.sid)
+
+        if(res.user.pending_friends_sent.indexOf(req.params.sid) >= 0){
+            console.log("checking")
+            res.user.pending_friends_sent.splice(res.user.pending_friends_sent.indexOf(req.params.sid), 1)
+            res.user.save()
+            console.log("recv user 2: ", res.user)
+    
+            User.findOne({ _id: req.params.sid}).
+            exec(function (err, u) {
+                if (err) return handleError(err);
+                console.log("send user 1: ", u)
+                if(u.pending_friends_received.indexOf(req.params.id) >= 0){
+                    u.pending_friends_received.splice(u.pending_friends_received.indexOf(req.params.id), 1)
+                    u.save()
+                    console.log("send user 2: ", u)
+                    res.json({message: "declined friend request"})
+                } else {
+                    res.status(500).json({ message: "friends do not match" })
+                }
+            })
+        } else {
+            res.status(500).json({ message: "friends do not match" })
+        }
+
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
+})
+
 // Send a game request
 router.put('/game-request/game/:gid/sender/:sid/receiver/:id', getUser, async (req, res) => {
     try {
