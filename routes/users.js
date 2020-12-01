@@ -109,8 +109,6 @@ router.get('/contains/:keyword', async (req, res) => {
         .exec(function (err, u) {
             res.json(u)
         })
-
-
     } catch (err) {
         res.status(500).json({ message: err.message })
     }
@@ -205,6 +203,41 @@ router.put('/friend-request/sender/:sid/receiver/:id/decline', getUser, async (r
                     u.save()
                     console.log("send user 2: ", u)
                     res.json({message: "declined friend request"})
+                } else {
+                    res.status(500).json({ message: "friends do not match" })
+                }
+            })
+        } else {
+            res.status(500).json({ message: "friends do not match" })
+        }
+
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
+})
+
+// Remove a friend
+router.put('/friends/sender/:sid/receiver/:id/remove', getUser, async (req, res) => {
+    try {
+        console.log("recv user 1: ", res.user)
+        console.log("friends: ", res.user.friends)
+        console.log("id: ", req.params.sid)
+
+        if(res.user.friends.indexOf(req.params.sid) >= 0){
+            console.log("checking")
+            res.user.friends.splice(res.user.friends.indexOf(req.params.sid), 1)
+            res.user.save()
+            console.log("recv user 2: ", res.user)
+    
+            User.findOne({ _id: req.params.sid}).
+            exec(function (err, u) {
+                if (err) return handleError(err);
+                console.log("send user 1: ", u)
+                if(u.friends.indexOf(req.params.id) >= 0){
+                    u.friends.splice(u.friends.indexOf(req.params.id), 1)
+                    u.save()
+                    console.log("send user 2: ", u)
+                    res.json({message: "removed friend"})
                 } else {
                     res.status(500).json({ message: "friends do not match" })
                 }
