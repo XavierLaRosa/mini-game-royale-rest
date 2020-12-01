@@ -121,7 +121,16 @@ router.put('/friend-request/sender/:sid/receiver/:id', getUser, async (req, res)
     try {
         res.user.pending_friends_received.push(req.params.sid)
         res.user.save()
+        console.log("changed 1: ", res.user)
         res.json({message: "friend request sent"})
+
+        User.findOne({ _id: req.params.sid}).
+        exec(function (err, u) {
+            if (err) return handleError(err);
+            u.pending_friends_sent.push(req.params.id)
+            u.save()
+            console.log("change", u)
+        })
     } catch {
         res.status(400).json({ message: err.message })
     }
@@ -129,17 +138,17 @@ router.put('/friend-request/sender/:sid/receiver/:id', getUser, async (req, res)
 
 // Confirm friend request sent
 router.put('/friend-request/sender/:id/receiver/:rid/confirm', getUser, async (req, res) => {
-    try {
-        res.user.pending_friends_sent.push(req.params.rid)
-        try {
-            const updatedUser = await res.user.save()
-            res.json(updatedUser)
-        } catch {
-            res.status(400).json({ message: err.message })
-        }
-    } catch {
-        res.status(400).json({ message: err.message })
-    }
+    // try {
+    //     res.user.pending_friends_sent.push(req.params.rid)
+    //     try {
+    //         const updatedUser = await res.user.save()
+    //         res.json(updatedUser)
+    //     } catch {
+    //         res.status(400).json({ message: err.message })
+    //     }
+    // } catch {
+    //     res.status(400).json({ message: err.message })
+    // }
 })
 
 // Create one user
