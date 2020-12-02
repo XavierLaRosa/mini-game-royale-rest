@@ -1,4 +1,5 @@
 // use the mongoose schema model
+const { boolean } = require('joi')
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
@@ -26,7 +27,12 @@ const gameSchema = new mongoose.Schema({
     verified_answers: [String],
     round: Number,
     max_round: Number,
-    active: Boolean
+    is_done: Boolean,
+    is_tie: Boolean,
+    winner: {
+        type: Schema.Types.ObjectId,
+        ref: "User"
+    }
 })
 
 // export game schema
