@@ -20,6 +20,7 @@ router.get('/:id', getGame, async (req, res) => {
     populate('current_turn_id', 'username').
     populate('player_1_id', 'username').
     populate('player_2_id', 'username').
+    populate('winner', 'username').
     exec(function (err, g) {
         if (err) return handleError(err);
         res.game = g
@@ -40,8 +41,9 @@ router.post('/', async (req, res) => {
         verified_answers: [],
         round: 1,
         max_round: req.body.max_round,
-        active: req.body.active
-      })
+        is_done: false,
+        is_tie: false
+    })
     
     try {
         const newGame = await game.save()
@@ -90,7 +92,7 @@ router.get('/:id/seconds-left/:seconds', getGame, async (req, res) => {
             res.game.current_turn_id = res.game.player_1_id
             if(res.game.round < res.game.max_round){
                 res.game.round += 1
-            }
+            } 
         }
         console.log("game: ", res.game)
         try {
@@ -100,6 +102,18 @@ router.get('/:id/seconds-left/:seconds', getGame, async (req, res) => {
             res.status(400).json({ message: err.message })
         }  
     } else {
+        if(res.game.is_done == false){
+            res.game.is_done = true
+            if(res.game.player_1_points > res.game.player_2_points){
+                res.game.winner = res.game.player_1_id
+            } else if(res.game.player_1_points < res.game.player_2_points){
+                res.game.winner = res.game.player_2_id
+            } else {
+                res.game.is_tie = true
+            }
+            const updatedGame = await res.game.save()
+            res.json(updatedGame)
+        }
         res.status(400).json({ message: "game is already over" })
     }
 })
