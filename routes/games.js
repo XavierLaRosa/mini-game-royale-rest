@@ -101,19 +101,22 @@ router.get('/:id/seconds-left/:seconds', getGame, async (req, res) => {
         } catch {
             res.status(400).json({ message: err.message })
         }  
-    } else {
-        if(res.game.is_done == false){
-            res.game.is_done = true
-            if(res.game.player_1_points > res.game.player_2_points){
-                res.game.winner = res.game.player_1_id
-            } else if(res.game.player_1_points < res.game.player_2_points){
-                res.game.winner = res.game.player_2_id
-            } else {
-                res.game.is_tie = true
-            }
-            const updatedGame = await res.game.save()
-            res.json(updatedGame)
+    } else if(res.game.is_done == false){
+        console.log("before inc: ", res.game)
+        res.game.player_2_points += 1
+        res.game.is_done = true
+        if(res.game.player_1_points > res.game.player_2_points){
+            res.game.winner = res.game.player_1_id
+        } else if(res.game.player_1_points < res.game.player_2_points){
+            res.game.winner = res.game.player_2_id
+        } else {
+            res.game.is_tie = true
         }
+        console.log("after inc: ", res.game)
+        const updatedGame = await res.game.save()
+        res.json(updatedGame)
+         
+    } else if(res.game.is_done == true){
         res.status(400).json({ message: "game is already over" })
     }
 })
