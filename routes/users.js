@@ -117,9 +117,6 @@ router.get('/contains/:keyword', async (req, res) => {
 // Send a friend request
 router.put('/friend-request/sender/:sid/receiver/:id', getUser, async (req, res) => {
     try {
-        console.log("user: ", res.user)
-        console.log("friends: ", res.user.friends)
-        console.log("id: ", req.params.sid)
         if(res.user.friends.includes(req.params.sid)){
             res.json({message: "already friends"})
         } else if(res.user.pending_friends_received.includes(req.params.sid)){
@@ -127,14 +124,12 @@ router.put('/friend-request/sender/:sid/receiver/:id', getUser, async (req, res)
         } else {
             res.user.pending_friends_received.push(req.params.sid)
             res.user.save()
-            console.log("changed 1: ", res.user)
 
             User.findOne({ _id: req.params.sid}).
             exec(function (err, u) {
                 if (err) return handleError(err);
                 u.pending_friends_sent.push(req.params.id)
                 u.save()
-                console.log("change", u)
             })
 
             res.json({message: "friend request sent"})
@@ -147,26 +142,18 @@ router.put('/friend-request/sender/:sid/receiver/:id', getUser, async (req, res)
 // Confirm a friend request
 router.put('/friend-request/sender/:sid/receiver/:id/confirm', getUser, async (req, res) => {
     try {
-        console.log("recv user 1: ", res.user)
-        console.log("friends: ", res.user.friends)
-        console.log("id: ", req.params.sid)
-
         if(res.user.pending_friends_sent.indexOf(req.params.sid) >= 0){
-            console.log("checking")
             res.user.pending_friends_sent.splice(res.user.pending_friends_sent.indexOf(req.params.sid), 1)
             res.user.friends.push(req.params.sid)
             res.user.save()
-            console.log("recv user 2: ", res.user)
     
             User.findOne({ _id: req.params.sid}).
             exec(function (err, u) {
                 if (err) return handleError(err);
-                console.log("send user 1: ", u)
                 if(u.pending_friends_received.indexOf(req.params.id) >= 0){
                     u.pending_friends_received.splice(u.pending_friends_received.indexOf(req.params.id), 1)
                     u.friends.push(req.params.id)
                     u.save()
-                    console.log("send user 2: ", u)
                     res.json({message: "confirmed friend request"})
                 } else {
                     res.status(500).json({ message: "friends do not match" })
@@ -184,24 +171,16 @@ router.put('/friend-request/sender/:sid/receiver/:id/confirm', getUser, async (r
 // Decline a friend request
 router.put('/friend-request/sender/:sid/receiver/:id/decline', getUser, async (req, res) => {
     try {
-        console.log("recv user 1: ", res.user)
-        console.log("friends: ", res.user.friends)
-        console.log("id: ", req.params.sid)
-
         if(res.user.pending_friends_sent.indexOf(req.params.sid) >= 0){
-            console.log("checking")
             res.user.pending_friends_sent.splice(res.user.pending_friends_sent.indexOf(req.params.sid), 1)
             res.user.save()
-            console.log("recv user 2: ", res.user)
     
             User.findOne({ _id: req.params.sid}).
             exec(function (err, u) {
                 if (err) return handleError(err);
-                console.log("send user 1: ", u)
                 if(u.pending_friends_received.indexOf(req.params.id) >= 0){
                     u.pending_friends_received.splice(u.pending_friends_received.indexOf(req.params.id), 1)
                     u.save()
-                    console.log("send user 2: ", u)
                     res.json({message: "declined friend request"})
                 } else {
                     res.status(500).json({ message: "friends do not match" })
@@ -219,24 +198,16 @@ router.put('/friend-request/sender/:sid/receiver/:id/decline', getUser, async (r
 // Remove a friend
 router.put('/friends/sender/:sid/receiver/:id/remove', getUser, async (req, res) => {
     try {
-        console.log("recv user 1: ", res.user)
-        console.log("friends: ", res.user.friends)
-        console.log("id: ", req.params.sid)
-
         if(res.user.friends.indexOf(req.params.sid) >= 0){
-            console.log("checking")
             res.user.friends.splice(res.user.friends.indexOf(req.params.sid), 1)
             res.user.save()
-            console.log("recv user 2: ", res.user)
     
             User.findOne({ _id: req.params.sid}).
             exec(function (err, u) {
                 if (err) return handleError(err);
-                console.log("send user 1: ", u)
                 if(u.friends.indexOf(req.params.id) >= 0){
                     u.friends.splice(u.friends.indexOf(req.params.id), 1)
                     u.save()
-                    console.log("send user 2: ", u)
                     res.json({message: "removed friend"})
                 } else {
                     res.status(500).json({ message: "friends do not match" })
@@ -254,10 +225,8 @@ router.put('/friends/sender/:sid/receiver/:id/remove', getUser, async (req, res)
 // Send a game request
 router.put('/game-request/game/:gid/sender/:sid/receiver/:id', getUser, async (req, res) => {
     try {
-        console.log("receiving user before: ", res.user)
         res.user.pending_games_received.push(req.params.gid)
         res.user.save()
-        console.log("changed 1: ", res.user)
         res.json({message: "game request sent"})
 
         User.findOne({ _id: req.params.sid}).
@@ -265,7 +234,6 @@ router.put('/game-request/game/:gid/sender/:sid/receiver/:id', getUser, async (r
             if (err) return handleError(err);
             u.pending_games_sent.push(req.params.gid)
             u.save()
-            console.log("change", u)
         })
     } catch {
         res.status(400).json({ message: err.message })
@@ -280,7 +248,6 @@ router.put('/game-request/game/:gid/sender/:id/receiver/:rid/confirm', getUser, 
         }
         res.user.games.push(req.params.gid)
         res.user.save()
-        console.log("changed 1: ", res.user)
         res.json({message: "game request sent"})
 
         User.findOne({ _id: req.params.rid}).
@@ -291,7 +258,6 @@ router.put('/game-request/game/:gid/sender/:id/receiver/:rid/confirm', getUser, 
             }
             u.games.push(req.params.gid)
             u.save()
-            console.log("change", u)
         })
     } catch {
         res.status(400).json({ message: err.message })
@@ -305,7 +271,6 @@ router.put('/game-request/game/:gid/sender/:id/receiver/:rid/decline', getUser, 
             res.user.pending_games_received.splice(res.user.pending_games_received.indexOf(req.params.gid), 1);
         }
         res.user.save()
-        console.log("changed 1: ", res.user)
         res.json({message: "game request sent"})
 
         User.findOne({ _id: req.params.rid}).
@@ -315,7 +280,6 @@ router.put('/game-request/game/:gid/sender/:id/receiver/:rid/decline', getUser, 
                 u.pending_games_sent.splice(u.pending_games_sent.indexOf(req.params.gid), 1);
             }
             u.save()
-            console.log("change", u)
         })
     } catch {
         res.status(400).json({ message: err.message })
