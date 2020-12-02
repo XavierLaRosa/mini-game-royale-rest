@@ -2,6 +2,7 @@
 const express = require('express')
 const router = express.Router()
 const Category = require('../models/category')
+const Game = require('../models/game')
 
 // Get all categories
 router.get('/', async (req, res) => {
@@ -19,18 +20,36 @@ router.get('/:id', getCategory, async (req, res) => {
 })
 
 // Check if answer is right
-router.get('/:id/submit/:submission', getCategory, async (req, res) => {
+router.get('/:id/submit/:submission/game/:gid', getCategory, async (req, res) => {
     if(res.category.answers.includes(req.params.submission.toLowerCase())){
-        res.json({
-            category: res.category.category,
-            answer: req.params.submission.toLowerCase(),
-            is_valid: true
+        Game.findOne({ _id: req.params.gid}).
+        exec(function (err, g) {
+            if (err) return handleError(err);
+            if(!g.verified_answers.includes(req.params.submission.toLowerCase())){
+                g.verified_answers.push(req.params.submission)
+                g.save()
+                res.json({
+                    category: res.category.category,
+                    answer: req.params.submission.toLowerCase(),
+                    is_valid: true,
+                    message: `${req.params.submission.toLowerCase()} is a ${res.category.category} !`,
+                    game: g
+                })
+            } else {
+                res.json({
+                    category: res.category.category,
+                    answer: req.params.submission.toLowerCase(),
+                    is_valid: false,
+                    message: `${req.params.submission.toLowerCase()} was already used!`
+                })
+            }
         })
     } else {
         res.json({
             category: res.category.category,
             answer: req.params.submission.toLowerCase(),
-            is_valid: false
+            is_valid: false,
+            message: `${req.params.submission.toLowerCase()} is not a ${res.category.category} !`
         })
     }    
 })

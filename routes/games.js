@@ -38,7 +38,7 @@ router.post('/', async (req, res) => {
         player_2_id: req.body.player_2_id,
         player_2_points: 0,
         verified_answers: [],
-        round: 0,
+        round: 1,
         max_round: req.body.max_round,
         active: req.body.active
       })
@@ -74,6 +74,33 @@ router.delete('/:id', getGame, async (req, res) => {
         res.json({ message: 'Deleted This game' })
     } catch(err) {
         res.status(500).json({ message: err.message })
+    }
+})
+
+// Add points and increment round for categories
+router.get('/:id/seconds-left/:seconds', getGame, async (req, res) => {
+    if(res.game.round <= res.game.max_round && !(res.game.round == res.game.max_round && res.game.current_turn_id.equals(res.game.player_2_id))){
+        if(res.game.player_1_id.equals(res.game.current_turn_id)){
+            console.log("p1")
+            res.game.player_1_points += 1
+            res.game.current_turn_id = res.game.player_2_id
+        } else if(res.game.player_2_id.equals(res.game.current_turn_id)){
+            console.log("p2")
+            res.game.player_2_points += 1
+            res.game.current_turn_id = res.game.player_1_id
+            if(res.game.round < res.game.max_round){
+                res.game.round += 1
+            }
+        }
+        console.log("game: ", res.game)
+        try {
+            const updatedGame = await res.game.save()
+            res.json(updatedGame)
+        } catch {
+            res.status(400).json({ message: err.message })
+        }  
+    } else {
+        res.status(400).json({ message: "game is already over" })
     }
 })
 
