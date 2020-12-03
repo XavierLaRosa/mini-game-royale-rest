@@ -72,16 +72,22 @@ router.get('/:id/new-entry/:entry', getCategory, async (req, res) => {
 
 // Create one category
 router.post('/', async (req, res) => {
-    const category = new Category({
-        category: req.body.category,
-        answers: req.body.answers
-      })
-    
-    try {
-        const newcategory = await category.save()
-        res.status(201).json(newcategory)
-    } catch (err) {
-        res.status(400).json({ message: err.message })
+
+    // check if user already exists
+    const isCategoryExist = await Category.findOne({ category: req.body.category });
+    if(isCategoryExist){
+        return res.status(400).json({ message: "Category already exists" });
+    } else {
+        const category = new Category({
+            category: req.body.category
+        })
+        
+        try {
+            const newcategory = await category.save()
+            res.status(201).json(newcategory)
+        } catch (err) {
+            res.status(400).json({ message: err.message })
+        }
     }
 })
 
