@@ -15,7 +15,275 @@ router.get('/', async (req, res) => {
 
 // Get one user
 router.get('/:id', getUser, async (req, res) => {
-    res.json(res.user)
+    User.findOne({ _id: res.user._id })
+        .populate('friends', 'username').
+        populate('pending_friends_sent', 'username').
+        populate('pending_friends_received', 'username').
+        populate('games').
+        populate('pending_games_sent').
+        populate({ 
+            path: 'pending_games_sent',
+            populate: {
+              path: 'player_1_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'pending_games_sent',
+            populate: {
+              path: 'player_2_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'pending_games_sent',
+            populate: {
+              path: 'current_turn_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate('pending_games_received').
+        populate({ 
+            path: 'pending_games_received',
+            populate: {
+              path: 'player_1_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'pending_games_received',
+            populate: {
+              path: 'player_2_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'pending_games_received',
+            populate: {
+              path: 'current_turn_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'games',
+            populate: {
+              path: 'player_1_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'games',
+            populate: {
+              path: 'player_2_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'games',
+            populate: {
+              path: 'current_turn_id',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        exec(function (err, u) {
+            if (err) return handleError(err);
+            res.user = u
+            res.json(res.user)
+        })
+})
+
+// Get list of matching users
+router.get('/contains/:keyword', async (req, res) => {
+    try {
+        User.find({ "username": { "$regex": req.params.keyword} })
+        .select('username')
+        .exec(function (err, u) {
+            res.json(u)
+        })
+    } catch (err) {
+        res.status(500).json({ message: err.message })
+    }
+})
+
+// Send a friend request
+router.put('/friend-request/sender/:sid/receiver/:id', getUser, async (req, res) => {
+    try {
+        if(res.user.friends.includes(req.params.sid)){
+            res.json({message: "already friends"})
+        } else if(res.user.pending_friends_received.includes(req.params.sid)){
+            res.json({message: "friend request already sent"})
+        } else {
+            res.user.pending_friends_received.push(req.params.sid)
+            res.user.save()
+
+            User.findOne({ _id: req.params.sid}).
+            exec(function (err, u) {
+                if (err) return handleError(err);
+                u.pending_friends_sent.push(req.params.id)
+                u.save()
+            })
+
+            res.json({message: "friend request sent"})
+        }
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
+})
+
+// Confirm a friend request
+router.put('/friend-request/sender/:sid/receiver/:id/confirm', getUser, async (req, res) => {
+    try {
+        if(res.user.pending_friends_sent.indexOf(req.params.sid) >= 0){
+            res.user.pending_friends_sent.splice(res.user.pending_friends_sent.indexOf(req.params.sid), 1)
+            res.user.friends.push(req.params.sid)
+            res.user.save()
+    
+            User.findOne({ _id: req.params.sid}).
+            exec(function (err, u) {
+                if (err) return handleError(err);
+                if(u.pending_friends_received.indexOf(req.params.id) >= 0){
+                    u.pending_friends_received.splice(u.pending_friends_received.indexOf(req.params.id), 1)
+                    u.friends.push(req.params.id)
+                    u.save()
+                    res.json({message: "confirmed friend request"})
+                } else {
+                    res.status(500).json({ message: "friends do not match" })
+                }
+            })
+        } else {
+            res.status(500).json({ message: "friends do not match" })
+        }
+
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
+})
+
+// Decline a friend request
+router.put('/friend-request/sender/:sid/receiver/:id/decline', getUser, async (req, res) => {
+    try {
+        if(res.user.pending_friends_sent.indexOf(req.params.sid) >= 0){
+            res.user.pending_friends_sent.splice(res.user.pending_friends_sent.indexOf(req.params.sid), 1)
+            res.user.save()
+    
+            User.findOne({ _id: req.params.sid}).
+            exec(function (err, u) {
+                if (err) return handleError(err);
+                if(u.pending_friends_received.indexOf(req.params.id) >= 0){
+                    u.pending_friends_received.splice(u.pending_friends_received.indexOf(req.params.id), 1)
+                    u.save()
+                    res.json({message: "declined friend request"})
+                } else {
+                    res.status(500).json({ message: "friends do not match" })
+                }
+            })
+        } else {
+            res.status(500).json({ message: "friends do not match" })
+        }
+
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
+})
+
+// Remove a friend
+router.put('/friends/sender/:sid/receiver/:id/remove', getUser, async (req, res) => {
+    try {
+        if(res.user.friends.indexOf(req.params.sid) >= 0){
+            res.user.friends.splice(res.user.friends.indexOf(req.params.sid), 1)
+            res.user.save()
+    
+            User.findOne({ _id: req.params.sid}).
+            exec(function (err, u) {
+                if (err) return handleError(err);
+                if(u.friends.indexOf(req.params.id) >= 0){
+                    u.friends.splice(u.friends.indexOf(req.params.id), 1)
+                    u.save()
+                    res.json({message: "removed friend"})
+                } else {
+                    res.status(500).json({ message: "friends do not match" })
+                }
+            })
+        } else {
+            res.status(500).json({ message: "friends do not match" })
+        }
+
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
+})
+
+// Send a game request
+router.put('/game-request/game/:gid/sender/:sid/receiver/:id', getUser, async (req, res) => {
+    try {
+        res.user.pending_games_received.push(req.params.gid)
+        res.user.save()
+        res.json({message: "game request sent"})
+
+        User.findOne({ _id: req.params.sid}).
+        exec(function (err, u) {
+            if (err) return handleError(err);
+            u.pending_games_sent.push(req.params.gid)
+            u.save()
+        })
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
+})
+
+// Confirm game request
+router.put('/game-request/game/:gid/sender/:id/receiver/:rid/confirm', getUser, async (req, res) => {
+    try {
+        if(res.user.pending_games_received.indexOf(req.params.gid) >= 0){
+            res.user.pending_games_received.splice(res.user.pending_games_received.indexOf(req.params.gid), 1);
+        }
+        res.user.games.push(req.params.gid)
+        res.user.save()
+        res.json({message: "game request sent"})
+
+        User.findOne({ _id: req.params.rid}).
+        exec(function (err, u) {
+            if (err) return handleError(err);
+            if(u.pending_games_sent.indexOf(req.params.gid) >= 0){
+                u.pending_games_sent.splice(u.pending_games_sent.indexOf(req.params.gid), 1);
+            }
+            u.games.push(req.params.gid)
+            u.save()
+        })
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
+})
+
+// Decline game request
+router.put('/game-request/game/:gid/sender/:id/receiver/:rid/decline', getUser, async (req, res) => {
+    try {
+        if(res.user.pending_games_received.indexOf(req.params.gid) >= 0){
+            res.user.pending_games_received.splice(res.user.pending_games_received.indexOf(req.params.gid), 1);
+        }
+        res.user.save()
+        res.json({message: "game request sent"})
+
+        User.findOne({ _id: req.params.rid}).
+        exec(function (err, u) {
+            if (err) return handleError(err);
+            if(u.pending_games_sent.indexOf(req.params.gid) >= 0){
+                u.pending_games_sent.splice(u.pending_games_sent.indexOf(req.params.gid), 1);
+            }
+            u.save()
+        })
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
 })
 
 // Create one user
@@ -25,6 +293,7 @@ const schema = Joi.object({
     password: Joi.string().min(4).max(1024).required(),
   });
 const bcrypt = require('bcrypt');
+const { error } = require('console')
 
 router.post('/', async (req, res) => {
     // validate user
@@ -49,7 +318,8 @@ router.post('/', async (req, res) => {
         friends: [],
         pending_friends_sent: [],
         pending_friends_received: [],
-        pending_game_invites: [],
+        pending_games_sent: [],
+        pending_games_received: [],
         active_games: [],
         games: []
       })
@@ -90,15 +360,7 @@ router.post("/login", async (req, res) => {
     res.header("auth-token", token).json({
         message: "Login successful",
         token,
-        data: {
-            username: user.username,
-            pending_friends_sent: user.pending_friends_sent,
-            pending_friends_received: user.pending_friends_received,
-            pending_game_invites: user.pending_game_invites,
-            active_games: user.active_games,
-            games: user.games,
-            date_created: user.date_created
-        }
+        user: user
     });
   });
 
@@ -110,24 +372,24 @@ router.put('/:id', getUser, async (req, res) => {
     if (req.body.password != null) { // check password
         res.user.password = req.body.password
     }
-    // if (!arraysEqual(req.body.friends, req.user.friends)){ // check friends
-    //     res.user.friends = req.body.friends
-    // }
-    // if (!arraysEqual(req.body.pending_friends_sent, req.user.pending_friends_sent)){ // check pending_friends_sent
-    //     res.user.pending_friends_sent = req.body.pending_friends_sent
-    // }
-    // if (!arraysEqual(req.body.pending_friends_received, req.user.pending_friends_received)){ // check pending_friends_received
-    //     res.user.pending_friends_received = req.body.pending_friends_received
-    // }
-    // if (!arraysEqual(req.body.pending_game_invites, req.user.pending_game_invites)){ // check pending_game_invites
-    //     res.user.pending_game_invites = req.body.pending_game_invites
-    // }
-    // if (!arraysEqual(req.body.active_games, req.user.active_games)){ // check active_games
-    //     res.user.active_games = req.body.active_games
-    // }
-    // if (!arraysEqual(req.body.games, req.user.games)){ // check games
-    //     res.user.games = req.body.games
-    // }
+    if (req.body.friends != null){ // check friends
+        res.user.friends = req.body.friends
+    }
+    if (req.body.pending_friends_sent != null){ // check pending_friends_sent
+        res.user.pending_friends_sent = req.body.pending_friends_sent
+    }
+    if (req.body.pending_friends_received != null){ // check pending_friends_received
+        res.user.pending_friends_received = req.body.pending_friends_received
+    }
+    if (req.body.pending_games_sent != null){ // check pending_games_sent
+        res.user.pending_games_sent = req.body.pending_games_sent
+    }
+    if (req.body.pending_games_received != null){ // check pending_games_received
+        res.user.pending_games_received = req.body.pending_games_received
+    }
+    if (req.body.games != null){ // check games
+        res.user.games = req.body.games
+    }
 
     try {
         const updatedUser = await res.user.save()

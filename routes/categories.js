@@ -2,6 +2,7 @@
 const express = require('express')
 const router = express.Router()
 const Category = require('../models/category')
+const Game = require('../models/game')
 
 // Get all categories
 router.get('/', async (req, res) => {
@@ -18,18 +19,75 @@ router.get('/:id', getCategory, async (req, res) => {
     res.json(res.category)
 })
 
+// Check if answer is right
+router.get('/:id/submit/:submission/game/:gid', getCategory, async (req, res) => {
+    if(res.category.answers.includes(req.params.submission.toLowerCase())){
+        Game.findOne({ _id: req.params.gid}).
+        exec(function (err, g) {
+            if (err) return handleError(err);
+            if(!g.verified_answers.includes(req.params.submission.toLowerCase())){
+                g.verified_answers.push(req.params.submission)
+                g.save()
+                res.json({
+                    category: res.category.category,
+                    answer: req.params.submission.toLowerCase(),
+                    is_valid: true,
+                    message: `${req.params.submission.toLowerCase()} is a ${res.category.category} !`,
+                    game: g
+                })
+            } else {
+                res.json({
+                    category: res.category.category,
+                    answer: req.params.submission.toLowerCase(),
+                    is_valid: false,
+                    message: `${req.params.submission.toLowerCase()} was already used!`
+                })
+            }
+        })
+    } else {
+        res.json({
+            category: res.category.category,
+            answer: req.params.submission.toLowerCase(),
+            is_valid: false,
+            message: `${req.params.submission.toLowerCase()} is not a ${res.category.category} !`
+        })
+    }    
+})
+
+// Add a new entry
+router.get('/:id/new-entry/:entry', getCategory, async (req, res) => {
+    console.log("pre cat: ", res.category)
+    if(!res.category.answers.includes(req.params.entry.toLowerCase())){
+        res.category.answers.push(req.params.entry.toLowerCase())
+        res.category.save()
+        res.json({
+            message: `New entry added to ${res.category.category}!`,
+            is_valid: true,
+            data: res.category
+        })
+    } else {
+        res.json({message: `Entry already exists in ${res.category.category}.`, is_valid: false})
+    }
+})
+
 // Create one category
 router.post('/', async (req, res) => {
-    const category = new Category({
-        category: req.body.category,
-        answers: req.body.answers
-      })
-    
-    try {
-        const newcategory = await category.save()
-        res.status(201).json(newcategory)
-    } catch (err) {
-        res.status(400).json({ message: err.message })
+
+    // check if user already exists
+    const isCategoryExist = await Category.findOne({ category: req.body.category });
+    if(isCategoryExist){
+        return res.status(400).json({ message: "Category already exists" });
+    } else {
+        const category = new Category({
+            category: req.body.category
+        })
+        
+        try {
+            const newcategory = await category.save()
+            res.status(201).json(newcategory)
+        } catch (err) {
+            res.status(400).json({ message: err.message })
+        }
     }
 })
 

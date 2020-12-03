@@ -5,6 +5,7 @@ require('dotenv').config()
 const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
+var cors = require('cors')
 
 // connect to mongodb database
 mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -17,6 +18,13 @@ const verifyToken = require("./routes/validate-token");
 
 // tell express to accept JSON as the data format
 app.use(express.json())
+
+// enable cors
+app.use(cors({
+    'origin': '*',
+    'methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    'preflightContinue': false
+}))
 
 const usersRouter = require('./routes/users')
 app.use('/users', usersRouter)

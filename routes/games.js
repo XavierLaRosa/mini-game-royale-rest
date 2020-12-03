@@ -15,14 +15,23 @@ router.get('/', async (req, res) => {
 
 // Get one game
 router.get('/:id', getGame, async (req, res) => {
-    res.json(res.game)
+    Game.findOne({ _id: res.game._id })
+    .populate('genre_id', 'category').
+    populate('current_turn_id', 'username').
+    populate('player_1_id', 'username').
+    populate('player_2_id', 'username').
+    populate('winner', 'username').
+    exec(function (err, g) {
+        if (err) return handleError(err);
+        res.game = g
+        res.json(res.game)
+    })
 })
 
 // Create one game
 router.post('/', async (req, res) => {
     const game = new Game({
         name: req.body.name,
-        type_id: req.body.type_id,
         genre_id: req.body.genre_id,
         current_turn_id: req.body.current_turn_id,
         player_1_id: req.body.player_1_id,
@@ -30,9 +39,11 @@ router.post('/', async (req, res) => {
         player_2_id: req.body.player_2_id,
         player_2_points: 0,
         verified_answers: [],
-        round: 0,
-        max_round: req.body.max_round
-      })
+        round: 1,
+        max_round: req.body.max_round,
+        is_done: false,
+        is_tie: false
+    })
     
     try {
         const newGame = await game.save()
@@ -65,6 +76,43 @@ router.delete('/:id', getGame, async (req, res) => {
         res.json({ message: 'Deleted This game' })
     } catch(err) {
         res.status(500).json({ message: err.message })
+    }
+})
+
+// Add points and increment round for categories
+router.get('/:id/seconds-left/:seconds', getGame, async (req, res) => {
+    if(res.game.round <= res.game.max_round && !(res.game.round == res.game.max_round && res.game.current_turn_id.equals(res.game.player_2_id))){
+        if(res.game.player_1_id.equals(res.game.current_turn_id)){
+            res.game.player_1_points += 1
+            res.game.current_turn_id = res.game.player_2_id
+        } else if(res.game.player_2_id.equals(res.game.current_turn_id)){
+            res.game.player_2_points += 1
+            res.game.current_turn_id = res.game.player_1_id
+            if(res.game.round < res.game.max_round){
+                res.game.round += 1
+            } 
+        }
+        try {
+            const updatedGame = await res.game.save()
+            res.json(updatedGame)
+        } catch {
+            res.status(400).json({ message: err.message })
+        }  
+    } else if(res.game.is_done == false){
+        res.game.player_2_points += 1
+        res.game.is_done = true
+        if(res.game.player_1_points > res.game.player_2_points){
+            res.game.winner = res.game.player_1_id
+        } else if(res.game.player_1_points < res.game.player_2_points){
+            res.game.winner = res.game.player_2_id
+        } else {
+            res.game.is_tie = true
+        }
+        const updatedGame = await res.game.save()
+        res.json(updatedGame)
+         
+    } else if(res.game.is_done == true){
+        res.status(400).json({ message: "game is already over" })
     }
 })
 
