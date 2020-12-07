@@ -59,68 +59,56 @@ router.get('/:id/submit/:submission/game/:gid', getCategory, async (req, res) =>
 // Add a new entry
 router.get('/:id/new-entry/:entry', getCategory, async (req, res) => {
     const entry = req.params.entry.toLowerCase()
+    var mssg = `${entry} was not added into ${res.category.category}, either it already exists or something similar enough to it already does.`
+    var is_valid = false
     var highestSimilarity = 0
     for(var i = 0; i < res.category.answers.length; i++) {
-        console.log("high: ", highestSimilarity)
         var pair = res.category.answers[i]
         var key = pair.key
         var value = pair.value
-        var similarity = stringSimilarity.compareTwoStrings(pair.key, entry);
+        var similarity = stringSimilarity.compareTwoStrings(pair.key, entry)
         if(similarity > highestSimilarity){
             highestSimilarity = similarity
-            console.log("high 2: ", highestSimilarity)
         }
-        if(similarity > 0.7 && similarity < 1.0 && !value.includes(entry)) { // new entry in value array
+        if(similarity > 0.5 && similarity < 1.0 && !value.includes(entry)) { // new entry in value array
             res.category.answers[i].value.push(entry)
+            mssg = `${entry} was added into list of accepted entries related to ${key} in ${res.category.category}`
+            is_valid = true
             if(key.length > entry.length){ // update key if entry is shorter
-                console.log("found")
                 res.category.answers[i].key = entry
-            }  
+            }
+            break;  
+        } else if(similarity < 0.5 && !value.includes(entry)) { // maybe values list gives a better score
+            for(var j = 0; j < value.length; j++) {
+                var v = value[j]
+                if(stringSimilarity.compareTwoStrings(v, entry) > 0.5){
+                    res.category.answers[i].value.push(entry)
+                    mssg = `${entry} was added into list of accepted entries related to ${key} in ${res.category.category}`
+                    is_valid = true
+                    if(key.length > entry.length){ // update key if entry is shorter
+                        res.category.answers[i].key = entry
+                    }
+                    break;  
+                }
+            };
         } 
     }
     if(res.category.answers.length == 0){
+        mssg = `${entry} added as first new entry in ${res.category.category}`
+        is_valid = true
         res.category.answers = [{key: entry, value: [entry]}]
-    } else if(highestSimilarity < 0.7){ // new key
+    } else if(highestSimilarity < 0.5){ // new key
+        mssg = `${entry} added as new entry in ${res.category.category}`
+        is_valid = true
         res.category.answers.push({key: entry, value: [entry]})
     }
     res.category.save()
     res.json({
-        message: `mssg`,
-        is_valid: true,
+        message: mssg,
+        is_valid: is_valid,
         data: res.category
     })
-
-
-
-    // console.log("pre cat: ", res.category)
-    // if(!res.category.answers.includes(req.params.entry.toLowerCase())){
-    //     res.category.answers.push(req.params.entry.toLowerCase())
-    //     res.category.save()
-    //     res.json({
-    //         message: `New entry added to ${res.category.category}!`,
-    //         is_valid: true,
-    //         data: res.category
-    //     })
-    // } else {
-    //     res.json({message: `Entry already exists in ${res.category.category}.`, is_valid: false})
-    // }
 })
-
-// helper method to see if answer is identical
-function isIdentical(old_entry, new_entry) {
-    if(old_entry.toLowerCase().equals(new_entry.toLowerCase())){ // if exact match
-        console.log("exact!", old_entry, new_entry)
-    }
-    if(new_entry.slice(0, -2).equals(old_entry) || old_entry.slice(0, -2).equals(new_entry)){ // if new is same as old but with 'es' at end of word, vice versa
-        console.log("word may contain 'es'!", old_entry, new_entry)
-    }
-    if(new_entry.slice(0, -1).equals(old_entry) || old_entry.slice(0, -1).equals(new_entry)){ // if new is same as old but with 's' at end of word, vice versa
-        console.log("word may contain 's'!", old_entry, new_entry)
-    }
-    if(old_entry.length > 4 && new_entry.length > 4){ // if both are 4 characters more
-        console.log("greater than 4!", old_entry, new_entry)
-    }
-}
 
 // Create one category
 router.post('/', async (req, res) => {
@@ -181,22 +169,3 @@ async function getCategory(req, res, next) {
     next() // move onto the next section of code (the rest of the specific route method logic)
   }
 module.exports = router
-
-// helper method to check if arrays match
-function arraysEqual(a, b) {
-    if(!a && !b){
-        console.log("both undefined")
-    } else if(a && !b){
-        console.log("current undefined")
-    } else if(!a && b){
-        console.log("new undefined")
-    }
-    if (a === b) return true;
-    if (a == null || b == null) return false;
-    if (a.length !== b.length) return false;
-  
-    for (var i = 0; i < a.length; ++i) {
-      if (a[i] !== b[i]) return false;
-    }
-    return true;
-}
