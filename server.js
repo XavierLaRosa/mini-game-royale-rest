@@ -39,4 +39,7 @@ const categoriesRouter = require('./routes/categories')
 app.use('/categories', verifyToken, categoriesRouter)
 
 // test out server is working
-app.listen(process.env.PORT || 3000, () => console.log('server started'))
+let server = app.listen(process.env.PORT || 3000, () => {
+    console.log('server started')
+    console.log("listening at port: ", server.address().port)
+})
