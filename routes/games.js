@@ -60,6 +60,7 @@ router.put('/:id', getGame, async (req, res) => {
     res.game.player_2_points = req.body.player_2_points
     res.game.round = req.body.round
     res.game.max_round = req.body.max_round
+    res.game.winner = req.body.winner
 
     try {
         const updatedGame = await res.game.save()

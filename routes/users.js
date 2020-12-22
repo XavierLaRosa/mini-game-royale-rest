@@ -89,6 +89,14 @@ router.get('/:id', getUser, async (req, res) => {
         populate({ 
             path: 'games',
             populate: {
+              path: 'winner',
+              model: 'User',
+              select: 'username'
+            } 
+        }).
+        populate({ 
+            path: 'games',
+            populate: {
               path: 'current_turn_id',
               model: 'User',
               select: 'username'
