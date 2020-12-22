@@ -84,10 +84,10 @@ router.delete('/:id', getGame, async (req, res) => {
 router.get('/:id/seconds-left/:seconds', getGame, async (req, res) => {
     if(res.game.round <= res.game.max_round && !(res.game.round == res.game.max_round && res.game.current_turn_id.equals(res.game.player_2_id))){
         if(res.game.player_1_id.equals(res.game.current_turn_id)){
-            res.game.player_1_points += 1
+            res.game.player_1_points += calculatePoints(req.params.seconds)
             res.game.current_turn_id = res.game.player_2_id
         } else if(res.game.player_2_id.equals(res.game.current_turn_id)){
-            res.game.player_2_points += 1
+            res.game.player_2_points += calculatePoints(req.params.seconds)
             res.game.current_turn_id = res.game.player_1_id
             if(res.game.round < res.game.max_round){
                 res.game.round += 1
@@ -100,7 +100,7 @@ router.get('/:id/seconds-left/:seconds', getGame, async (req, res) => {
             res.status(400).json({ message: err.message })
         }  
     } else if(res.game.is_done == false){
-        res.game.player_2_points += 1
+        res.game.player_2_points += calculatePoints(req.params.seconds)
         res.game.is_done = true
         if(res.game.player_1_points > res.game.player_2_points){
             res.game.winner = res.game.player_1_id
@@ -150,4 +150,13 @@ function arraysEqual(a, b) {
       if (a[i] !== b[i]) return false;
     }
     return true;
+}
+
+// calculates points given
+function calculatePoints(seconds) {
+    if(seconds == 0){
+        return 1000
+    } else {
+        return 1000/seconds
+    }
 }
