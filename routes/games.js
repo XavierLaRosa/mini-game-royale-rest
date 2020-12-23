@@ -120,27 +120,19 @@ router.get('/:id/seconds-left/:seconds', getGame, async (req, res) => {
 // forfeit game
 router.get('/:id/forfeit/:pid', getGame, async (req, res) => {
     const points = Math.max(res.game.player_1_points, res.game.player_2_points)
-    console.log("points: ", points)
-    console.log("p1: ", res.game.player_1_id)
     if(res.game.player_1_id.equals(req.params.pid)){
-        console.log("p1 forfeit")
         res.game.winner = res.game.player_2_id
         res.game.player_2_points = points
     } else if(res.game.player_2_id.equals(req.params.pid)){
-        console.log("p2 forfeit")
         res.game.winner = res.game.player_1_id
         res.game.player_1_points = points
-    } else {
-        console.log("no match")
     }
     if(res.game.winner){
-        console.log("sending winner: ", res.game.winner)
         res.game.round = res.game.max_round
         res.game.is_done = true
         const updatedGame = await res.game.save()
         res.status(200).json(updatedGame)
     } else {
-        console.log("no match")
         res.status(400).json({ message: "forfeit did not go through"})
     }
 
@@ -186,6 +178,6 @@ function calculatePoints(seconds) {
     if(seconds == 0){
         return 1000
     } else {
-        return 1000/seconds
+        return Math.ceil(1000/seconds) 
     }
 }
