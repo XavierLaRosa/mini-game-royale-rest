@@ -23,37 +23,56 @@ router.get('/:id', getCategory, async (req, res) => {
 
 // Check if answer is right
 router.get('/:id/submit/:submission/game/:gid', getCategory, async (req, res) => {
-    if(res.category.answers.includes(req.params.submission.toLowerCase())){
+    const entry = req.params.submission.toLowerCase()
+    var entryExists = false
+    var trueEntry
+    var message
+    var is_valid = false
+    res.category.answers.forEach(a => {
+        if(a.key == entry) {
+            entryExists = true
+            trueEntry = a.key
+        } else {
+            a.value.forEach(v => {
+                if(v == entry) {
+                    entryExists = true
+                    trueEntry = a.key
+                }
+            })
+        }
+    })
+    if(entryExists){
+        if(entry != trueEntry) {
+            message = `${entry} matches ${trueEntry} and is a ${res.category.category} !`
+        } else {
+            message = `${entry} is a ${res.category.category} !`
+        }
         Game.findOne({ _id: req.params.gid}).
         exec(function (err, g) {
             if (err) return handleError(err);
-            if(!g.verified_answers.includes(req.params.submission.toLowerCase())){
-                g.verified_answers.push(req.params.submission)
-                g.save()
-                res.json({
-                    category: res.category.category,
-                    answer: req.params.submission.toLowerCase(),
-                    is_valid: true,
-                    message: `${req.params.submission.toLowerCase()} is a ${res.category.category} !`,
-                    game: g
-                })
+            if(g.verified_answers.includes(trueEntry)) {
+                message = `${entry} or something similar was already used!`
             } else {
-                res.json({
-                    category: res.category.category,
-                    answer: req.params.submission.toLowerCase(),
-                    is_valid: false,
-                    message: `${req.params.submission.toLowerCase()} was already used!`
-                })
+                is_valid = true
+                g.verified_answers.push(trueEntry)
+                g.save()
             }
+            res.json({
+                category: res.category.category,
+                answer: trueEntry,
+                is_valid: is_valid,
+                message: message,
+                game: g
+            })
         })
     } else {
         res.json({
             category: res.category.category,
-            answer: req.params.submission.toLowerCase(),
-            is_valid: false,
-            message: `${req.params.submission.toLowerCase()} is not a ${res.category.category} !`
+            answer: entry,
+            is_valid: is_valid,
+            message: `${entry} is not a ${res.category.category} !`
         })
-    }    
+    } 
 })
 
 // Add a new entry
