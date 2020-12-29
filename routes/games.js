@@ -138,6 +138,16 @@ router.get('/:id/forfeit/:pid', getGame, async (req, res) => {
 
 })
 
+// // Delete all games
+// router.delete('/', async (req, res) => {
+//     try {
+//         await Game.deleteMany()
+//         res.json({ message: 'Deleted All Games' })
+//     } catch(err) {
+//         res.status(500).json({ message: err.message })
+//     }
+// })
+
 // Reusable function thats gets a single game, helpful for GET by id, UPDATE, DELETE
 async function getGame(req, res, next) {
     try {

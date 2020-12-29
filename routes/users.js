@@ -508,6 +508,16 @@ router.delete('/:id', getUser, async (req, res) => {
     }
 })
 
+// // Delete all users
+// router.delete('/', async (req, res) => {
+//     try {
+//         await User.deleteMany()
+//         res.json({ message: 'Deleted All Users' })
+//     } catch(err) {
+//         res.status(500).json({ message: err.message })
+//     }
+// })
+
 // Reusable function thats gets a single user, helpful for GET by id, UPDATE, DELETE
 async function getUser(req, res, next) {
     try {
