@@ -2,6 +2,7 @@
 const express = require('express')
 const router = express.Router()
 const User = require('../models/user')
+const Game = require('../models/game')
 
 // Get all users
 router.get('/', async (req, res) => {
@@ -16,9 +17,9 @@ router.get('/', async (req, res) => {
 // Get one user
 router.get('/:id', getUser, async (req, res) => {
     User.findOne({ _id: res.user._id })
-        .populate('friends', 'username').
-        populate('pending_friends_sent', 'username').
-        populate('pending_friends_received', 'username').
+        .populate('friends', ['username','icon']).
+        populate('pending_friends_sent', ['username','icon']).
+        populate('pending_friends_received', ['username','icon']).
         populate('games').
         populate('pending_games_sent').
         populate({ 
@@ -26,7 +27,7 @@ router.get('/:id', getUser, async (req, res) => {
             populate: {
               path: 'player_1_id',
               model: 'User',
-              select: 'username'
+              select: ['username','icon']
             } 
         }).
         populate({ 
@@ -34,7 +35,7 @@ router.get('/:id', getUser, async (req, res) => {
             populate: {
               path: 'player_2_id',
               model: 'User',
-              select: 'username'
+              select: ['username','icon']
             } 
         }).
         populate({ 
@@ -42,7 +43,7 @@ router.get('/:id', getUser, async (req, res) => {
             populate: {
               path: 'current_turn_id',
               model: 'User',
-              select: 'username'
+              select: ['username','icon']
             } 
         }).
         populate('pending_games_received').
@@ -51,7 +52,7 @@ router.get('/:id', getUser, async (req, res) => {
             populate: {
               path: 'player_1_id',
               model: 'User',
-              select: 'username'
+              select: ['username','icon']
             } 
         }).
         populate({ 
@@ -59,7 +60,7 @@ router.get('/:id', getUser, async (req, res) => {
             populate: {
               path: 'player_2_id',
               model: 'User',
-              select: 'username'
+              select: ['username','icon']
             } 
         }).
         populate({ 
@@ -67,7 +68,7 @@ router.get('/:id', getUser, async (req, res) => {
             populate: {
               path: 'current_turn_id',
               model: 'User',
-              select: 'username'
+              select: ['username','icon']
             } 
         }).
         populate({ 
@@ -75,7 +76,7 @@ router.get('/:id', getUser, async (req, res) => {
             populate: {
               path: 'player_1_id',
               model: 'User',
-              select: 'username'
+              select: ['username','icon']
             } 
         }).
         populate({ 
@@ -83,7 +84,7 @@ router.get('/:id', getUser, async (req, res) => {
             populate: {
               path: 'player_2_id',
               model: 'User',
-              select: 'username'
+              select: ['username','icon']
             } 
         }).
         populate({ 
@@ -91,7 +92,7 @@ router.get('/:id', getUser, async (req, res) => {
             populate: {
               path: 'winner',
               model: 'User',
-              select: 'username'
+              select: ['username','icon']
             } 
         }).
         populate({ 
@@ -99,7 +100,7 @@ router.get('/:id', getUser, async (req, res) => {
             populate: {
               path: 'current_turn_id',
               model: 'User',
-              select: 'username'
+              select: ['username','icon']
             } 
         }).
         exec(function (err, u) {
@@ -113,7 +114,7 @@ router.get('/:id', getUser, async (req, res) => {
 router.get('/contains/:keyword', async (req, res) => {
     try {
         User.find({ "username": { "$regex": req.params.keyword} })
-        .select('username')
+        .select(['username', 'icon'])
         .exec(function (err, u) {
             res.json(u)
         })
@@ -144,6 +145,38 @@ router.put('/friend-request/sender/:sid/receiver/:id', getUser, async (req, res)
         }
     } catch {
         res.status(400).json({ message: err.message })
+    }
+})
+
+// Unsend a friend request
+router.put('/friend-request/sender/:sid/receiver/:id/unsend', getUser, async (req, res) => {
+    try {
+        if(res.user.pending_friends_received.includes(req.params.sid)){
+            console.log("in if")
+            const index = res.user.pending_friends_received.indexOf(req.params.sid)
+            res.user.pending_friends_received.splice(index, 1)
+            console.log("index: ", index)
+            User.findOne({ "_id": req.params.sid })
+                .exec(function (err, u) {
+                    console.log("U: ", u)
+                    if(err){
+                        res.status(400).json(err.message)
+                    }
+                    if(u.pending_friends_sent.includes(req.params.id)){
+                        const index = u.pending_friends_sent.indexOf(req.params.id)
+                        console.log("index: ", index)
+                        u.pending_friends_sent.splice(index, 1)
+                        u.save()
+                        res.user.save()
+                        res.json(u)
+                    } 
+                })
+        } else {
+            console.log("in else")
+            res.status(400).json({ message: "could not unsend friend request" })
+        }
+    } catch {
+        res.status(400).json({ message: "message" })
     }
 })
 
@@ -279,7 +312,6 @@ router.put('/game-request/game/:gid/sender/:id/receiver/:rid/decline', getUser, 
             res.user.pending_games_received.splice(res.user.pending_games_received.indexOf(req.params.gid), 1);
         }
         res.user.save()
-        res.json({message: "game request sent"})
 
         User.findOne({ _id: req.params.rid}).
         exec(function (err, u) {
@@ -289,6 +321,41 @@ router.put('/game-request/game/:gid/sender/:id/receiver/:rid/decline', getUser, 
             }
             u.save()
         })
+        Game.findOne({_id: req.params.gid}).
+            exec(function (err, g) {
+                if (err) return handleError(err);
+                g.remove()
+                res.json({message: "delete game request sent"})
+        })
+    } catch {
+        res.status(400).json({ message: err.message })
+    }
+})
+
+// Unsend game request
+router.put('/game-request/game/:gid/sender/:id/receiver/:rid/unsend', getUser, async (req, res) => {
+    try {
+        if(res.user.pending_games_sent.indexOf(req.params.gid) >= 0){
+            res.user.pending_games_sent.splice(res.user.pending_games_sent.indexOf(req.params.gid), 1);
+            res.user.save()
+
+            User.findOne({ _id: req.params.rid}).
+            exec(function (err, u) {
+                if (err) return handleError(err);
+                if(u.pending_games_received.indexOf(req.params.gid) >= 0){
+                    u.pending_games_received.splice(u.pending_games_received.indexOf(req.params.gid), 1);
+                    u.save()
+                }
+            })
+            Game.findOne({_id: req.params.gid}).
+            exec(function (err, g) {
+                if (err) return handleError(err);
+                g.remove()
+                res.json({message: "unsend game request sent"})
+            })
+        } else {
+            res.status(400).json("game does not exists in pending games sent of original sender.")
+        }
     } catch {
         res.status(400).json({ message: err.message })
     }
@@ -323,6 +390,7 @@ router.post('/', async (req, res) => {
     const user = new User({
         username: req.body.username,
         password, // hashed password
+        icon: "mochi",
         friends: [],
         pending_friends_sent: [],
         pending_friends_received: [],
@@ -374,28 +442,51 @@ router.post("/login", async (req, res) => {
 
 // Update one user
 router.put('/:id', getUser, async (req, res) => {
-    if (req.body.username != null) { // check username
+    if (req.body.username) { // check username
+        // validate user
+        const { error } = schema.validate(req.body);
+        if(error){
+            return res.status(400).json({ message: error.details[0].message });
+        }
+
+        // check if user already exists
+        const isUserExist = await User.findOne({ username: req.body.username });
+        if(isUserExist){
+            return res.status(400).json({ message: "Username already exists" });
+        }
         res.user.username = req.body.username
     }
-    if (req.body.password != null) { // check password
-        res.user.password = req.body.password
+    if (req.body.password) { // check password
+        // validate user
+        const { error } = schema.validate(req.body);
+        if(error){
+            return res.status(400).json({ message: error.details[0].message });
+        }
+
+        // hash the password
+        const salt = await bcrypt.genSalt(10);
+        const password = await bcrypt.hash(req.body.password, salt);
+        res.user.password = password
     }
-    if (req.body.friends != null){ // check friends
+    if (req.body.icon) { // check icon
+        res.user.icon = req.body.icon
+    }
+    if (req.body.friends){ // check friends
         res.user.friends = req.body.friends
     }
-    if (req.body.pending_friends_sent != null){ // check pending_friends_sent
+    if (req.body.pending_friends_sent){ // check pending_friends_sent
         res.user.pending_friends_sent = req.body.pending_friends_sent
     }
-    if (req.body.pending_friends_received != null){ // check pending_friends_received
+    if (req.body.pending_friends_received){ // check pending_friends_received
         res.user.pending_friends_received = req.body.pending_friends_received
     }
-    if (req.body.pending_games_sent != null){ // check pending_games_sent
+    if (req.body.pending_games_sent){ // check pending_games_sent
         res.user.pending_games_sent = req.body.pending_games_sent
     }
-    if (req.body.pending_games_received != null){ // check pending_games_received
+    if (req.body.pending_games_received){ // check pending_games_received
         res.user.pending_games_received = req.body.pending_games_received
     }
-    if (req.body.games != null){ // check games
+    if (req.body.games){ // check games
         res.user.games = req.body.games
     }
 
