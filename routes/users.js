@@ -444,7 +444,7 @@ router.post("/login", async (req, res) => {
 router.put('/:id', getUser, async (req, res) => {
     if (req.body.username) { // check username
         // validate user
-        const { error } = schema.validate(req.body);
+        const { error } = schema.validate({username: req.body.username, password: req.body.password});
         if(error){
             return res.status(400).json({ message: error.details[0].message });
         }
@@ -458,7 +458,7 @@ router.put('/:id', getUser, async (req, res) => {
     }
     if (req.body.password) { // check password
         // validate user
-        const { error } = schema.validate(req.body);
+        const { error } = schema.validate({username: req.body.username, password: req.body.password});
         if(error){
             return res.status(400).json({ message: error.details[0].message });
         }
