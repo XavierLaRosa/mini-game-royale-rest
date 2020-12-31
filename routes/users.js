@@ -391,6 +391,7 @@ router.post('/', async (req, res) => {
         username: req.body.username,
         password, // hashed password
         icon: "mochi",
+        gold: 0,
         friends: [],
         pending_friends_sent: [],
         pending_friends_received: [],
@@ -470,6 +471,9 @@ router.put('/:id', getUser, async (req, res) => {
     }
     if (req.body.icon) { // check icon
         res.user.icon = req.body.icon
+    }
+    if (req.body.gold) { // check gold
+        res.user.gold = req.body.gold
     }
     if (req.body.friends){ // check friends
         res.user.friends = req.body.friends

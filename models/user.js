@@ -16,6 +16,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    gold: {
+        type: Number
+    },
     friends: [{
         type: Schema.Types.ObjectId,
         ref: "User"

@@ -32,7 +32,8 @@ const gameSchema = new mongoose.Schema({
     winner: {
         type: Schema.Types.ObjectId,
         ref: "User"
-    }
+    },
+    earnings: Number
 })
 
 // export game schema
