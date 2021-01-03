@@ -89,7 +89,7 @@ router.get('/:id/new-entry/:entry', getCategory, async (req, res) => {
         if(similarity > highestSimilarity){
             highestSimilarity = similarity
         }
-        if(similarity > 0.5 && similarity < 1.0 && !value.includes(entry)) { // new entry in value array
+        if(similarity > 0.8 && similarity < 1.0 && !value.includes(entry)) { // new entry in value array
             res.category.answers[i].value.push(entry)
             mssg = `${entry} was added into list of accepted entries related to ${key} in ${res.category.category}`
             is_valid = true
@@ -97,10 +97,10 @@ router.get('/:id/new-entry/:entry', getCategory, async (req, res) => {
                 res.category.answers[i].key = entry
             }
             break;  
-        } else if(similarity < 0.5 && !value.includes(entry)) { // maybe values list gives a better score
+        } else if(similarity < 0.8 && !value.includes(entry)) { // maybe values list gives a better score
             for(var j = 0; j < value.length; j++) {
                 var v = value[j]
-                if(stringSimilarity.compareTwoStrings(v, entry) > 0.5){
+                if(stringSimilarity.compareTwoStrings(v, entry) > 0.8){
                     res.category.answers[i].value.push(entry)
                     mssg = `${entry} was added into list of accepted entries related to ${key} in ${res.category.category}`
                     is_valid = true
@@ -116,7 +116,7 @@ router.get('/:id/new-entry/:entry', getCategory, async (req, res) => {
         mssg = `${entry} added as first new entry in ${res.category.category}`
         is_valid = true
         res.category.answers = [{key: entry, value: [entry]}]
-    } else if(highestSimilarity < 0.5){ // new key
+    } else if(highestSimilarity < 0.8){ // new key
         mssg = `${entry} added as new entry in ${res.category.category}`
         is_valid = true
         res.category.answers.push({key: entry, value: [entry]})
