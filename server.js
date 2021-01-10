@@ -38,5 +38,8 @@ app.use('/sessions', verifyToken, sessionsRouter)
 const categoriesRouter = require('./routes/categories')
 app.use('/categories', verifyToken, categoriesRouter)
 
+const categoriesGRouter = require('./routes/categoriesG')
+app.use('/categoriesG', verifyToken, categoriesGRouter)
+
 // test out server is working
 app.listen(process.env.PORT || 3000, () => console.log('server started'))
