@@ -11,19 +11,26 @@ var playerSchema = mongoose.Schema({
     icon: String,
     is_winner: Boolean,
     points: Number,
-    earnings: Number
+    earnings: Number,
+    forfeited: Boolean
 },{ _id : false });
 
 // sub schema
 var answerSchema = mongoose.Schema({
     entry: String,
     player: playerSchema,
-    points: Number
+    points: Number,
+    up_votes: Number,
+    down_votes: Number,
+    max_votes: Number,
+    approved: Boolean
 },{ _id : false });
 
 // define the schema
 const categoryGSchema = new mongoose.Schema({
+    type: String,
     genre: String,
+    description: String,
     players: [playerSchema],
     answers: [answerSchema],
     is_done: Boolean,
