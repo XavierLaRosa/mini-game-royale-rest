@@ -29,17 +29,8 @@ app.use(cors({
 const usersRouter = require('./routes/users')
 app.use('/users', usersRouter)
 
-const gamesRouter = require('./routes/games')
-app.use('/games', verifyToken, gamesRouter)
-
-const sessionsRouter = require('./routes/sessions')
-app.use('/sessions', verifyToken, sessionsRouter)
-
 const categoriesRouter = require('./routes/categories')
-app.use('/categories', verifyToken, categoriesRouter)
-
-const categoriesGRouter = require('./routes/categoriesG')
-app.use('/categoriesG', verifyToken, categoriesGRouter)
+app.use('/categories', categoriesRouter)
 
 // test out server is working
 app.listen(process.env.PORT || 3000, () => console.log('server started'))
