@@ -2,6 +2,8 @@
 const express = require('express')
 const router = express.Router()
 const Category = require('../models/category')
+const Answer = require('../models/answer')
+const { findById } = require('../models/category')
 
 /*  Get All Categories
     - send nothing
@@ -40,6 +42,7 @@ router.post('/', async (req, res) => {
             round: 1,
             current_player_turn_number: 1
         })
+        console.log("creating category", category)
         const newcategory = await category.save()
         res.status(201).json(newcategory)
     } catch (err) {
@@ -101,17 +104,88 @@ router.delete('/', async (req, res) => {
 router.put('/:id/submit-answers', getCategory, async (req, res) => {
     try {
         for(var i = 0; i<req.body.answers.length; i++){
-            let answer = req.body.answers[i]
-            answer.points = calculatePoints(answer.entry, answer.time)
-            answer.up_votes = 0
-            answer.down_votes = 0
-            answer.max_votes = res.category.players.length - 1
-            answer.approved = false
-            answer.player = req.body.player
-            res.category.answers.push(answer)
+            const answer = new Answer({
+                points: calculatePoints(req.body.answers[i].entry, req.body.answers[i].time),
+                up_votes: [],
+                down_votes: [],
+                max_votes: res.category.players.length - 1,
+                approved: false,
+                pending: true,
+                player: req.body.player
+            })
+            const newAnswer = await answer.save()
+            res.category.answers.push(newAnswer)
         }
-        const updatedcategory = await res.category.save()
-        res.json(updatedcategory)
+        const updatedCategory = await res.category.save()
+        res.json(updatedCategory)
+    } catch (err) {
+        res.status(400).json({ message: err.message })
+    }
+})
+
+/*  Up Vote Answer
+    - send game id, answer id and your user id
+    - configure answer object and save category
+    - returns updated category object
+*/
+router.put('/:id/up-vote/:aid/:uid', getCategory, async (req, res) => {
+    try {
+        // check if answer id exists in answers
+        let index = -1
+        res.category.answers.forEach((a, i) => {
+            if(a._id.equals(req.params.aid)) {
+                index = i
+            }
+        })
+
+        // check if id doesnt exist in answer up_votes and <= max votes
+        const answer = await Answer.findById(req.params.aid)
+        if(answer && answer.up_votes.indexOf(req.params.uid) < 0 && ((answer.up_votes.length + answer.down_votes.length - 1) <= answer.max_votes)) {
+            // add id to answer up_votes
+            answer.up_votes.push(req.params.uid)
+            answer.pending = getAnswerStatus(answer).pending
+            answer.approved = getAnswerStatus(answer).approved
+            res.category.answers[index] = answer
+            answer.save()
+            const updatedCategory = await res.category.save()
+            res.json(updatedCategory)
+        } else {
+            res.status(400).json({ message: "could not up vote this answer" })
+        }
+    } catch (err) {
+        res.status(400).json({ message: err.message })
+    }
+})
+
+/*  Down Vote Answer
+    - send game id, answer id and your user id
+    - configure answer object and save category
+    - returns updated category object
+*/
+router.put('/:id/down-vote/:aid/:uid', getCategory, async (req, res) => {
+    try {
+        // check if answer id exists in answers
+        let index = -1
+        res.category.answers.forEach((a, i) => {
+            if(a._id.equals(req.params.aid)) {
+                index = i
+            }
+        })
+
+        // check if id doesnt exist in answer down_votes and <= max votes
+        const answer = await Answer.findById(req.params.aid)
+        if(answer && answer.down_votes.indexOf(req.params.uid) < 0 && ((answer.up_votes.length + answer.down_votes.length - 1) <= answer.max_votes)) {
+            // add id to answer down_votes
+            answer.down_votes.push(req.params.uid)
+            answer.pending = getAnswerStatus(answer).pending
+            answer.approved = getAnswerStatus(answer).approved
+            res.category.answers[index] = answer
+            answer.save()
+            const updatedCategory = await res.category.save()
+            res.json(updatedCategory)
+        } else {
+            res.status(400).json({ message: "could not up vote this answer" })
+        }
     } catch (err) {
         res.status(400).json({ message: err.message })
     }
@@ -200,7 +274,7 @@ router.put('/:id/decline-answer/:answer', getCategory, async (req, res) => {
 // Reusable function thats gets a single category, helpful for GET by id, UPDATE, DELETE
 async function getCategory(req, res, next) {
     try {
-      category = await Category.findById(req.params.id)
+      category = await Category.findById(req.params.id).populate('answers')
       if (category == null) {
         return res.status(404).json({ message: 'Cant find category'})
       }
@@ -214,5 +288,27 @@ async function getCategory(req, res, next) {
 module.exports = router
 
 function calculatePoints(entry, time) {
-    return Math.ceil(1000/time) + entry.length*50
+    return Math.ceil(1000/time) + entry.length * 50
+}
+
+function getAnswerStatus(answer) {
+    let response = { pending: true, approved: false }
+    const up_points = answer.up_votes.length
+    const down_points = answer.down_votes.length
+    const max = answer.max_votes
+
+    if(up_points + down_points == max) {
+        response.pending = false
+    } else {
+        response.pending = true
+    }
+    if(!response.pending && up_points >= down_points) {
+        response.approved = true
+    } else if(!response.pending && down_points > up_points) {
+        response.approved = false
+    } else {
+        response.approved = false
+    }
+
+    return response
 }

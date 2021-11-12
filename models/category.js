@@ -1,7 +1,7 @@
 // use the mongoose schema model
 const { string } = require('joi');
 const mongoose = require('mongoose')
-
+const Schema = mongoose.Schema
 
 // sub schema
 var playerSchema = mongoose.Schema({
@@ -15,24 +15,15 @@ var playerSchema = mongoose.Schema({
     forfeited: Boolean
 },{ _id : false });
 
-// sub schema
-var answerSchema = mongoose.Schema({
-    entry: String,
-    time: Number,
-    player: String,
-    points: Number,
-    up_votes: Number,
-    down_votes: Number,
-    max_votes: Number,
-    approved: Boolean
-},{ _id : false });
-
 // define the schema
 const categorySchema = new mongoose.Schema({
     genre: String,
     description: String,
     players: [playerSchema],
-    answers: [answerSchema],
+    answers: [{
+        type: Schema.Types.ObjectId,
+        ref: "Answer"
+    }],
     is_done: Boolean,
     is_tie: Boolean,
     round: Number,
