@@ -23,25 +23,9 @@ const userSchema = new mongoose.Schema({
         type: Schema.Types.ObjectId,
         ref: "User"
     }],
-    pending_friends_sent: [{
+    categories: [{
         type: Schema.Types.ObjectId,
-        ref: "User"
-    }],
-    pending_friends_received: [{
-        type: Schema.Types.ObjectId,
-        ref: "User"
-    }],
-    pending_games_sent: [{
-        type: Schema.Types.ObjectId,
-        ref: "Game"
-    }],
-    pending_games_received: [{
-        type: Schema.Types.ObjectId,
-        ref: "Game"
-    }],
-    games: [{
-        type: Schema.Types.ObjectId,
-        ref: "Game"
+        ref: "Category"
     }],
     date_created: {
       type: Date,
