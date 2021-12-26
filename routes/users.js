@@ -24,6 +24,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', getUser, async (req, res) => {
     User.findOne({ _id: res.user._id })
         .populate('friends', ['username','icon'])
+        .populate('categories', ['genre','description','players','is_done','is_tie','round','current_player_turn_number'])
         .exec(function (err, u) {
             if (err) return handleError(err);
             res.user = u
