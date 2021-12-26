@@ -3,6 +3,7 @@ const express = require('express')
 const router = express.Router()
 const Category = require('../models/category')
 const Answer = require('../models/answer')
+const User = require('../models/user')
 const { findById } = require('../models/category')
 
 /*  Get All Categories
@@ -42,8 +43,15 @@ router.post('/', async (req, res) => {
             round: 1,
             current_player_turn_number: 1
         })
-        console.log("creating category", category)
         const newcategory = await category.save()
+
+        for(let i = 0; i < req.body.players.length; i++) {
+            const user = await User.findById(req.body.players[i].user_id)
+            if(user) {
+                user.categories.push(newcategory)
+                user.save()
+            }
+        }
         res.status(201).json(newcategory)
     } catch (err) {
         res.status(400).json({ message: err.message })
